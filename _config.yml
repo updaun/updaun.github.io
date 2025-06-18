@@ -1,3 +1,3 @@
-remote_theme: mmistakes/minimal-mistakes@latest
+remote_theme: mmistakes/minimal-mistakes@4.27.0
 plugins:
   - jekyll-remote-theme
