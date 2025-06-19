@@ -1,0 +1,33 @@
+---
+layout: default
+title: Home
+---
+
+<div class="home">
+    <h1 class="page-heading">최근 포스트</h1>
+
+    <ul class="post-list">
+        {% for post in site.posts limit:10 %}
+        <li>
+            <span class="post-meta">{{ post.date | date: "%Y년 %m월 %d일" }}</span>
+            <h2>
+                <a class="post-link" href="{{ post.url | relative_url }}">{{ post.title }}</a>
+            </h2>
+            {% if post.excerpt %}
+            <p>{{ post.excerpt | strip_html | truncatewords: 50 }}</p>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <p class="rss-subscribe">subscribe <a href="{{ " /feed.xml" | relative_url }}">via RSS</a></p>
+</div>
+
+<div class="categories">
+    <h2>카테고리</h2>
+    <ul>
+        {% for category in site.categories %}
+        <li><a href="/categories/{{ category[0] }}">{{ category[0] }}</a> ({{ category[1].size }})</li>
+        {% endfor %}
+    </ul>
+</div>

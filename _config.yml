@@ -1,2 +1,25 @@
 theme: jekyll-theme-cayman
 show_downloads: false
+title: Up & Daun 블로그
+description: AWS Solution Architect Associate 자격증 공부 내용을 정리하는 블로그
+url: "https://updaun.github.io" # 실제 GitHub Pages URL로 변경하세요
+baseurl: "/updaun_blog" # 리포지토리 이름으로 변경하세요
+author:
+  name: updaun
+
+# 블로그 기능 설정
+permalink: /:categories/:year/:month/:day/:title/
+paginate: 5
+paginate_path: "/blog/page:num/"
+
+# jekyll 플러그인 설정
+plugins:
+  - jekyll-paginate
+  - jekyll-feed
+  - jekyll-seo-tag
+
+# 블로그 카테고리 설정
+collections:
+  categories:
+    output: true
+    permalink: /categories/:name/
