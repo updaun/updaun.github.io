@@ -3,7 +3,7 @@ show_downloads: false
 title: Up & Daun 블로그
 description: AWS Solution Architect Associate 자격증 공부 내용을 정리하는 블로그
 url: "https://updaun.github.io" # 실제 GitHub Pages URL로 변경하세요
-baseurl: "/updaun_blog" # 리포지토리 이름으로 변경하세요
+baseurl: "/updaun.github.io" # 리포지토리 이름으로 변경하세요
 author:
   name: updaun
 
