@@ -2,32 +2,31 @@
 layout: default
 ---
 
-<div class="main-content">
-    <article class="post content-area" itemscope itemtype="http://schema.org/BlogPosting">
-        <header class="post-header">
-            <h1 class="post-title" itemprop="name headline">{{ page.title | escape }}</h1>
-            <div class="post-meta">
-                <time datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
-                    {{ page.date | date: "%Y년 %m월 %d일" }}
-                </time>
-                {% if page.author %}
-                • <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-                    <span itemprop="name">{{ page.author }}</span>
-                </span>
-                {% endif %}
-            </div>
-            {% if page.categories %}
-            <div class="post-categories">
-                {% for category in page.categories %}
-                <span class="post-category">{{ category }}</span>
-                {% endfor %}
-            </div>
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">{{ page.title | escape }}</h1>
+        <div class="post-meta">
+            <time datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
+                {{ page.date | date: "%Y년 %m월 %d일" }}
+            </time>
+            {% if page.author %}
+            • <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <span itemprop="name">{{ page.author }}</span>
+            </span>
             {% endif %}
-            {% if page.tags %}
-            <div class="post-tags">
-                {% for tag in page.tags %}
-                <span class="tag-item">{{ tag }}</span>
-                {% endfor %}
+        </div>
+        {% if page.categories %}
+        <div class="post-categories">
+            {% for category in page.categories %}
+            <span class="post-category">{{ category }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if page.tags %}
+        <div class="post-tags">
+            {% for tag in page.tags %}
+            <span class="tag-item">{{ tag }}</span>
+            {% endfor %}
             </div>
             {% endif %}
         </header>
@@ -88,7 +87,4 @@ layout: default
                 </li>
                 {% endunless %}
                 {% endfor %}
-            </ul>
-        </div>
-    </div>
-</div>
+    </article>
