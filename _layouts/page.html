@@ -1,7 +1,41 @@
 ---
 layout: default
 ---
-<div class="page">
-    <h1 class="page-title">{{ page.title | escape }}</h1>
-    {{ content }}
+
+<div class="main-content">
+    <div class="page content-area">
+        <h1 class="page-heading">{{ page.title | escape }}</h1>
+        {{ content }}
+    </div>
+    
+    <div class="sidebar">
+        <div class="categories">
+            <h2>📂 카테고리</h2>
+            <ul>
+                {% assign sorted_categories = site.categories | sort %}
+                {% for category in sorted_categories %}
+                <li>
+                    <a href="/categories/{{ category[0] | downcase | replace: ' ', '-' }}">
+                        <span>{{ category[0] }}</span>
+                        <span class="category-count">{{ category[1].size }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="recent-posts">
+            <h2>📝 최근 포스트</h2>
+            <ul>
+                {% for post in site.posts limit:5 %}
+                <li>
+                    <a href="{{ post.url | relative_url }}" class="recent-post-link">
+                        <span class="recent-post-title">{{ post.title | truncate: 40 }}</span>
+                        <span class="recent-post-date">{{ post.date | date: "%m.%d" }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
 </div>

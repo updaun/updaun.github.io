@@ -3,31 +3,68 @@ layout: default
 title: Home
 ---
 
-<div class="home">
-    <h1 class="page-heading">최근 포스트</h1>
+<div class="main-content">
+    <div class="content-area">
+        <div class="home">
+            <h1 class="page-heading">✨ 최근 포스트</h1>
 
-    <ul class="post-list">
-        {% for post in site.posts limit:10 %}
-        <li>
-            <span class="post-meta">{{ post.date | date: "%Y년 %m월 %d일" }}</span>
-            <h2>
-                <a class="post-link" href="{{ post.url | relative_url }}">{{ post.title }}</a>
-            </h2>
-            {% if post.excerpt %}
-            <p>{{ post.excerpt | strip_html | truncatewords: 50 }}</p>
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
+            <ul class="post-list">
+                {% for post in site.posts limit:10 %}
+                <li>
+                    <div class="post-meta">{{ post.date | date: "%Y년 %m월 %d일" }}</div>
+                    <h2>
+                        <a class="post-link" href="{{ post.url | relative_url }}">{{ post.title }}</a>
+                    </h2>
+                    {% if post.categories %}
+                    <div class="post-categories">
+                        {% for category in post.categories %}
+                        <span class="post-category">{{ category }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if post.excerpt %}
+                    <p class="post-excerpt">{{ post.excerpt | strip_html | truncatewords: 30 }}</p>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
 
-    <p class="rss-subscribe">subscribe <a href="{{ " /feed.xml" | relative_url }}">via RSS</a></p>
-</div>
+            <div class="rss-subscribe-wrapper">
+                <p class="rss-subscribe">
+                    <a href="{{ '/feed.xml' | relative_url }}" class="rss-link">
+                        📡 RSS 구독하기
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
 
-<div class="categories">
-    <h2>카테고리</h2>
-    <ul>
-        {% for category in site.categories %}
-        <li><a href="/categories/{{ category[0] }}">{{ category[0] }}</a> ({{ category[1].size }})</li>
-        {% endfor %}
-    </ul>
+    <div class="sidebar">
+        <div class="categories">
+            <h2>📂 카테고리</h2>
+            <ul>
+                {% assign sorted_categories = site.categories | sort %}
+                {% for category in sorted_categories %}
+                <li>
+                    <a href="/categories/{{ category[0] | downcase | replace: ' ', '-' }}">
+                        <span>{{ category[0] }}</span>
+                        <span class="category-count">{{ category[1].size }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="recent-tags">
+            <h2>🏷️ 인기 태그</h2>
+            <div class="tag-cloud">
+                {% assign tags = site.tags | sort %}
+                {% for tag in tags limit:10 %}
+                <a href="/tags/{{ tag[0] | downcase | replace: ' ', '-' }}" class="tag-item">
+                    {{ tag[0] }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>

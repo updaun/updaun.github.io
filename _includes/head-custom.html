@@ -1,3 +1,128 @@
 <!-- 사용자 정의 헤더 요소 -->
 <link rel="icon" type="image/png" href="{{ '/assets/img/favicon.png' | relative_url }}">
-<!-- Google Analytics 또는 다른 스크립트를 여기에 추가할 수 있습니다 -->
+
+<!-- 목차 자동 생성 스크립트 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 목차 생성
+    function generateTOC() {
+        const tocContainer = document.getElementById('toc-content');
+        if (!tocContainer) return;
+        
+        const headers = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3, .post-content h4');
+        if (headers.length === 0) {
+            tocContainer.innerHTML = '<p style="color: var(--text-light); font-size: 14px;">목차가 없습니다.</p>';
+            return;
+        }
+        
+        let tocHTML = '<ul>';
+        headers.forEach((header, index) => {
+            const id = `toc-${index}`;
+            header.id = id;
+            
+            const level = parseInt(header.tagName.charAt(1));
+            const indent = (level - 1) * 15;
+            
+            tocHTML += `
+                <li style="margin-left: ${indent}px;">
+                    <a href="#${id}" data-target="${id}">
+                        ${header.textContent.replace(/^[🔍🚨🛡️🎯🚀📋💭📂🏷️📝📅]*\s*/, '')}
+                    </a>
+                </li>
+            `;
+        });
+        tocHTML += '</ul>';
+        
+        tocContainer.innerHTML = tocHTML;
+        
+        // 목차 클릭 이벤트
+        tocContainer.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-target');
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    }
+    
+    // 스크롤 시 현재 섹션 하이라이트
+    function highlightCurrentSection() {
+        const headers = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3, .post-content h4');
+        const tocLinks = document.querySelectorAll('#toc-content a');
+        
+        let currentSection = 0;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        headers.forEach((header, index) => {
+            if (header.offsetTop <= scrollTop + 100) {
+                currentSection = index;
+            }
+        });
+        
+        tocLinks.forEach((link, index) => {
+            link.style.background = index === currentSection ? 'var(--primary-light)' : '';
+            link.style.color = index === currentSection ? 'var(--primary-dark)' : '';
+            link.style.fontWeight = index === currentSection ? '600' : '400';
+        });
+    }
+    
+    // 부드러운 등장 애니메이션
+    function animateElements() {
+        const elements = document.querySelectorAll('.post-list > li, .content-area, .sidebar');
+        elements.forEach((el, index) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                el.style.transition = 'all 0.6s ease-out';
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    }
+    
+    // 실행
+    generateTOC();
+    animateElements();
+    
+    // 스크롤 이벤트 리스너
+    let ticking = false;
+    window.addEventListener('scroll', function() {
+        if (!ticking) {
+            requestAnimationFrame(function() {
+                highlightCurrentSection();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+    
+    // 반응형 네비게이션 토글
+    const navTrigger = document.getElementById('nav-trigger');
+    const siteNav = document.querySelector('.site-nav');
+    
+    if (navTrigger && siteNav) {
+        navTrigger.addEventListener('change', function() {
+            if (this.checked) {
+                siteNav.classList.add('nav-open');
+            } else {
+                siteNav.classList.remove('nav-open');
+            }
+        });
+    }
+});
+</script>
+
+<!-- 메타 태그 및 SEO -->
+<meta name="theme-color" content="#b19cd9">
+<meta name="msapplication-TileColor" content="#b19cd9">
+
+<!-- 프리로드 폰트 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

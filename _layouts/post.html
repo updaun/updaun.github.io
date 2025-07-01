@@ -1,37 +1,94 @@
 ---
 layout: default
 ---
-<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
 
-    <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">{{ page.title | escape }}</h1>
-        <p class="post-meta">
-            <time datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
-                {{ page.date | date: "%Y년 %m월 %d일" }}
-            </time>
-            {% if page.author %}
-            • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span itemprop="name">{{ page.author
-                    }}</span></span>
-            {% endif %}
+<div class="main-content">
+    <article class="post content-area" itemscope itemtype="http://schema.org/BlogPosting">
+        <header class="post-header">
+            <h1 class="post-title" itemprop="name headline">{{ page.title | escape }}</h1>
+            <div class="post-meta">
+                <time datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
+                    {{ page.date | date: "%Y년 %m월 %d일" }}
+                </time>
+                {% if page.author %}
+                • <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+                    <span itemprop="name">{{ page.author }}</span>
+                </span>
+                {% endif %}
+            </div>
             {% if page.categories %}
-            •
-            {% for category in page.categories %}
-            <span class="post-category">{{ category }}</span>
-            {% endfor %}
+            <div class="post-categories">
+                {% for category in page.categories %}
+                <span class="post-category">{{ category }}</span>
+                {% endfor %}
+            </div>
             {% endif %}
-        </p>
-    </header>
+            {% if page.tags %}
+            <div class="post-tags">
+                {% for tag in page.tags %}
+                <span class="tag-item">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </header>
 
-    <div class="post-content" itemprop="articleBody">
-        {{ content }}
-    </div>
+        <div class="post-content" itemprop="articleBody">
+            {{ content }}
+        </div>
 
-    <div class="post-navigation">
-        {% if page.previous.url %}
-        <a class="prev" href="{{ page.previous.url | relative_url }}">&laquo; {{ page.previous.title }}</a>
-        {% endif %}
-        {% if page.next.url %}
-        <a class="next" href="{{ page.next.url | relative_url }}">{{ page.next.title }} &raquo;</a>
-        {% endif %}
+        <div class="post-navigation">
+            {% if page.previous.url %}
+            <a class="prev" href="{{ page.previous.url | relative_url }}">
+                <span class="nav-direction">이전 포스트</span>
+                <span class="nav-title">{{ page.previous.title }}</span>
+            </a>
+            {% endif %}
+            {% if page.next.url %}
+            <a class="next" href="{{ page.next.url | relative_url }}">
+                <span class="nav-direction">다음 포스트</span>
+                <span class="nav-title">{{ page.next.title }}</span>
+            </a>
+            {% endif %}
+        </div>
+    </article>
+
+    <div class="sidebar">
+        <div class="toc-sidebar">
+            <h2>📋 목차</h2>
+            <div id="toc-content">
+                <!-- 목차는 JavaScript로 동적 생성 -->
+            </div>
+        </div>
+
+        <div class="categories">
+            <h2>📂 카테고리</h2>
+            <ul>
+                {% assign sorted_categories = site.categories | sort %}
+                {% for category in sorted_categories limit:8 %}
+                <li>
+                    <a href="/categories/{{ category[0] | downcase | replace: ' ', '-' }}">
+                        <span>{{ category[0] }}</span>
+                        <span class="category-count">{{ category[1].size }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="recent-posts">
+            <h2>📝 최근 포스트</h2>
+            <ul>
+                {% for post in site.posts limit:5 %}
+                {% unless post.url == page.url %}
+                <li>
+                    <a href="{{ post.url | relative_url }}" class="recent-post-link">
+                        <span class="recent-post-title">{{ post.title | truncate: 40 }}</span>
+                        <span class="recent-post-date">{{ post.date | date: "%m.%d" }}</span>
+                    </a>
+                </li>
+                {% endunless %}
+                {% endfor %}
+            </ul>
+        </div>
     </div>
-</article>
+</div>
