@@ -131,8 +131,8 @@ a:hover {
     margin-left: 25px;
     font-weight: 600;
     text-decoration: none;
-    padding: 12px 20px;
-    border-radius: 25px;
+    padding: 8px 16px;
+    border-radius: 20px;
     transition: all 0.3s ease;
     position: relative;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
@@ -556,17 +556,17 @@ a:hover {
     .site-nav {
         position: absolute;
         top: 9px;
-        right: 15px;
+        left: 15px;
         background-color: var(--background-color);
         border: 1px solid var(--border-color);
         border-radius: 8px;
-        text-align: right;
+        text-align: left;
         box-shadow: var(--card-shadow);
     }
     
     .site-nav label[for="nav-trigger"] {
         display: block;
-        float: right;
+        float: left;
         width: 36px;
         height: 36px;
         z-index: 2;
@@ -575,7 +575,7 @@ a:hover {
     
     .site-nav .menu-icon {
         display: block;
-        float: right;
+        float: left;
         width: 36px;
         height: 26px;
         line-height: 0;
@@ -600,7 +600,7 @@ a:hover {
     
     .site-nav .page-link {
         display: block;
-        padding: 10px 15px;
+        padding: 8px 12px;
         margin: 5px;
         font-size: 14px;
         border-radius: 8px;
@@ -667,7 +667,7 @@ a:hover {
     }
     
     .site-nav .page-link {
-        padding: 8px 12px;
+        padding: 6px 10px;
         margin: 3px;
         font-size: 13px;
     }
