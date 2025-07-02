@@ -157,7 +157,7 @@ a:hover {
 /* 메인 콘텐츠 레이아웃 */
 .content-wrapper {
     display: grid;
-    grid-template-columns: 250px 1fr;
+    grid-template-columns: 280px 1fr;
     gap: 30px;
     align-items: start;
 }
@@ -178,14 +178,15 @@ a:hover {
     border: 1px solid var(--border-color);
     position: sticky;
     top: 100px;
+    box-shadow: var(--card-shadow);
 }
 
 .sidebar-content {
-    padding: 20px;
+    padding: 25px;
 }
 
 .sidebar-section {
-    margin-bottom: 25px;
+    margin-bottom: 30px;
 }
 
 .sidebar-section:last-child {
@@ -193,13 +194,14 @@ a:hover {
 }
 
 .sidebar-section h3 {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
     color: var(--heading-color);
-    margin-bottom: 15px;
+    margin-bottom: 18px;
     margin-top: 0;
-    padding-bottom: 8px;
+    padding-bottom: 10px;
     border-bottom: 2px solid var(--primary-color);
+    text-align: center;
 }
 
 .category-list, .recent-posts {
@@ -209,12 +211,14 @@ a:hover {
 }
 
 .category-list li {
-    margin-bottom: 12px;
+    margin-bottom: 15px;
 }
 
 .category-list a {
-    display: block;
-    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px 20px;
     border-radius: 12px;
     font-size: 15px;
     font-weight: 600;
@@ -224,7 +228,8 @@ a:hover {
     border: none;
     text-decoration: none;
     box-shadow: 0 4px 15px rgba(139, 122, 184, 0.3);
-    text-align: center;
+    text-align: left;
+    min-height: 50px;
 }
 
 .category-list a:hover {
@@ -235,9 +240,17 @@ a:hover {
 }
 
 .category-list a::before {
-    content: "�";
+    content: "📁";
     margin-right: 8px;
     font-size: 16px;
+}
+
+.category-list a[href="/"]::before {
+    content: "🏠";
+}
+
+.category-list a[href*="aws-saa"]::before {
+    content: "☁️";
 }
 
 /* 포스트 리스트 스타일 */
@@ -483,7 +496,7 @@ a:hover {
     }
     
     .content-wrapper {
-        grid-template-columns: 200px 1fr;
+        grid-template-columns: 240px 1fr;
         gap: 20px;
     }
     
@@ -492,7 +505,16 @@ a:hover {
     }
     
     .sidebar-content {
-        padding: 15px;
+        padding: 20px;
+    }
+    
+    .sidebar-section h3 {
+        font-size: 16px;
+    }
+    
+    .category-list a {
+        padding: 14px 16px;
+        font-size: 14px;
     }
 }
 
@@ -514,11 +536,13 @@ a:hover {
         position: static;
         order: 2;
         margin-top: 20px;
+        border-radius: 12px;
     }
     
     .main-content {
         order: 1;
         padding: 20px;
+        border-radius: 12px;
     }
     
     .page-content {
@@ -535,8 +559,9 @@ a:hover {
         right: 15px;
         background-color: var(--background-color);
         border: 1px solid var(--border-color);
-        border-radius: 5px;
+        border-radius: 8px;
         text-align: right;
+        box-shadow: var(--card-shadow);
     }
     
     .site-nav label[for="nav-trigger"] {
@@ -562,6 +587,10 @@ a:hover {
         clear: both;
         margin-bottom: 5px;
         display: none;
+        background: white;
+        border-radius: 8px;
+        box-shadow: var(--card-shadow);
+        padding: 10px;
     }
     
     .site-nav input ~ .trigger {
@@ -571,8 +600,31 @@ a:hover {
     
     .site-nav .page-link {
         display: block;
-        padding: 5px 10px;
-        margin-left: 20px;
+        padding: 10px 15px;
+        margin: 5px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+    
+    /* 사이드바가 모바일에서 더 컴팩트하게 */
+    .sidebar-content {
+        padding: 20px;
+    }
+    
+    .category-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .category-list li {
+        margin-bottom: 0;
+    }
+    
+    .category-list a {
+        padding: 12px 16px;
+        font-size: 14px;
+        text-align: center;
     }
 }
 
@@ -596,6 +648,28 @@ a:hover {
     
     .site-title {
         font-size: 20px;
+    }
+    
+    .category-list {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .category-list a {
+        padding: 14px 12px;
+        font-size: 13px;
+        min-height: 45px;
+    }
+    
+    .sidebar-section h3 {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+    
+    .site-nav .page-link {
+        padding: 8px 12px;
+        margin: 3px;
+        font-size: 13px;
     }
 }
 
