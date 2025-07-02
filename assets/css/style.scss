@@ -490,6 +490,15 @@ a:hover {
     height: 15px;
 }
 
+/* 데스크톱에서는 trigger가 항상 표시 */
+.site-nav .trigger {
+    display: block;
+}
+
+.site-nav input {
+    display: none;
+}
+
 @media screen and (max-width: 1024px) {
     .wrapper {
         padding: 0 15px;
@@ -557,11 +566,11 @@ a:hover {
         position: absolute;
         top: 9px;
         left: 15px;
-        background-color: var(--background-color);
-        border: 1px solid var(--border-color);
+        background-color: transparent;
+        border: none;
         border-radius: 8px;
         text-align: left;
-        box-shadow: var(--card-shadow);
+        box-shadow: none;
     }
     
     .site-nav label[for="nav-trigger"] {
@@ -571,6 +580,10 @@ a:hover {
         height: 36px;
         z-index: 2;
         cursor: pointer;
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: var(--card-shadow);
     }
     
     .site-nav .menu-icon {
@@ -579,7 +592,7 @@ a:hover {
         width: 36px;
         height: 26px;
         line-height: 0;
-        padding-top: 10px;
+        padding-top: 5px;
         text-align: center;
     }
     
@@ -591,11 +604,20 @@ a:hover {
         border-radius: 8px;
         box-shadow: var(--card-shadow);
         padding: 10px;
+        position: absolute;
+        top: 45px;
+        left: 0;
+        min-width: 200px;
+        z-index: 1000;
     }
     
-    .site-nav input ~ .trigger {
+    .site-nav input:checked ~ .trigger {
         display: block;
-        padding-bottom: 5px;
+    }
+    
+    /* 체크박스가 체크되지 않았을 때 메뉴 숨기기 */
+    .site-nav input:not(:checked) ~ .trigger {
+        display: none !important;
     }
     
     .site-nav .page-link {
