@@ -131,8 +131,8 @@ a:hover {
     margin-left: 25px;
     font-weight: 600;
     text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 12px 20px;
+    border-radius: 25px;
     transition: all 0.3s ease;
     position: relative;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
@@ -157,7 +157,7 @@ a:hover {
 /* 메인 콘텐츠 레이아웃 */
 .content-wrapper {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 250px 1fr;
     gap: 30px;
     align-items: start;
 }
@@ -178,15 +178,14 @@ a:hover {
     border: 1px solid var(--border-color);
     position: sticky;
     top: 100px;
-    box-shadow: var(--card-shadow);
 }
 
 .sidebar-content {
-    padding: 25px;
+    padding: 20px;
 }
 
 .sidebar-section {
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .sidebar-section:last-child {
@@ -194,14 +193,13 @@ a:hover {
 }
 
 .sidebar-section h3 {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 600;
     color: var(--heading-color);
-    margin-bottom: 18px;
+    margin-bottom: 15px;
     margin-top: 0;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
     border-bottom: 2px solid var(--primary-color);
-    text-align: center;
 }
 
 .category-list, .recent-posts {
@@ -211,14 +209,12 @@ a:hover {
 }
 
 .category-list li {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .category-list a {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 16px 20px;
+    display: block;
+    padding: 14px 18px;
     border-radius: 12px;
     font-size: 15px;
     font-weight: 600;
@@ -228,8 +224,7 @@ a:hover {
     border: none;
     text-decoration: none;
     box-shadow: 0 4px 15px rgba(139, 122, 184, 0.3);
-    text-align: left;
-    min-height: 50px;
+    text-align: center;
 }
 
 .category-list a:hover {
@@ -240,17 +235,9 @@ a:hover {
 }
 
 .category-list a::before {
-    content: "📁";
+    content: "�";
     margin-right: 8px;
     font-size: 16px;
-}
-
-.category-list a[href="/"]::before {
-    content: "🏠";
-}
-
-.category-list a[href*="aws-saa"]::before {
-    content: "☁️";
 }
 
 /* 포스트 리스트 스타일 */
@@ -490,22 +477,13 @@ a:hover {
     height: 15px;
 }
 
-/* 데스크톱에서는 trigger가 항상 표시 */
-.site-nav .trigger {
-    display: block;
-}
-
-.site-nav input {
-    display: none;
-}
-
 @media screen and (max-width: 1024px) {
     .wrapper {
         padding: 0 15px;
     }
     
     .content-wrapper {
-        grid-template-columns: 240px 1fr;
+        grid-template-columns: 200px 1fr;
         gap: 20px;
     }
     
@@ -514,26 +492,27 @@ a:hover {
     }
     
     .sidebar-content {
-        padding: 20px;
-    }
-    
-    .sidebar-section h3 {
-        font-size: 16px;
-    }
-    
-    .category-list a {
-        padding: 14px 16px;
-        font-size: 14px;
+        padding: 15px;
     }
 }
 
 @media screen and (max-width: 768px) {
     .site-header {
         padding: 15px 0;
+        position: relative;
+    }
+    
+    .site-header .wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
     }
     
     .site-title {
         font-size: 22px;
+        flex: 1;
+        min-width: 0;
     }
     
     .content-wrapper {
@@ -545,13 +524,11 @@ a:hover {
         position: static;
         order: 2;
         margin-top: 20px;
-        border-radius: 12px;
     }
     
     .main-content {
         order: 1;
         padding: 20px;
-        border-radius: 12px;
     }
     
     .page-content {
@@ -563,36 +540,33 @@ a:hover {
     h3 { font-size: 1.25rem; }
     
     .site-nav {
-        position: absolute;
-        top: 9px;
-        left: 15px;
-        background-color: transparent;
-        border: none;
-        border-radius: 8px;
-        text-align: left;
-        box-shadow: none;
+        position: static;
+        float: none;
+        line-height: normal;
+        background-color: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        text-align: right;
+        margin-left: 15px;
+        flex-shrink: 0;
     }
     
     .site-nav label[for="nav-trigger"] {
         display: block;
-        float: left;
+        float: right;
         width: 36px;
         height: 36px;
         z-index: 2;
         cursor: pointer;
-        background: var(--background-color);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        box-shadow: var(--card-shadow);
     }
     
     .site-nav .menu-icon {
         display: block;
-        float: left;
+        float: right;
         width: 36px;
         height: 26px;
         line-height: 0;
-        padding-top: 5px;
+        padding-top: 10px;
         text-align: center;
     }
     
@@ -600,53 +574,17 @@ a:hover {
         clear: both;
         margin-bottom: 5px;
         display: none;
-        background: white;
-        border-radius: 8px;
-        box-shadow: var(--card-shadow);
-        padding: 10px;
-        position: absolute;
-        top: 45px;
-        left: 0;
-        min-width: 200px;
-        z-index: 1000;
     }
     
-    .site-nav input:checked ~ .trigger {
+    .site-nav input ~ .trigger {
         display: block;
-    }
-    
-    /* 체크박스가 체크되지 않았을 때 메뉴 숨기기 */
-    .site-nav input:not(:checked) ~ .trigger {
-        display: none !important;
+        padding-bottom: 5px;
     }
     
     .site-nav .page-link {
         display: block;
-        padding: 8px 12px;
-        margin: 5px;
-        font-size: 14px;
-        border-radius: 8px;
-    }
-    
-    /* 사이드바가 모바일에서 더 컴팩트하게 */
-    .sidebar-content {
-        padding: 20px;
-    }
-    
-    .category-list {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    
-    .category-list li {
-        margin-bottom: 0;
-    }
-    
-    .category-list a {
-        padding: 12px 16px;
-        font-size: 14px;
-        text-align: center;
+        padding: 5px 10px;
+        margin-left: 20px;
     }
 }
 
@@ -670,28 +608,6 @@ a:hover {
     
     .site-title {
         font-size: 20px;
-    }
-    
-    .category-list {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    
-    .category-list a {
-        padding: 14px 12px;
-        font-size: 13px;
-        min-height: 45px;
-    }
-    
-    .sidebar-section h3 {
-        font-size: 16px;
-        margin-bottom: 15px;
-    }
-    
-    .site-nav .page-link {
-        padding: 6px 10px;
-        margin: 3px;
-        font-size: 13px;
     }
 }
 
