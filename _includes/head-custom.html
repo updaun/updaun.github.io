@@ -1,7 +1,39 @@
 <!-- 사용자 정의 헤더 요소 -->
 <link rel="icon" type="image/png" href="{{ '/assets/img/favicon.png' | relative_url }}">
 
-<!-- 스무스 스크롤링과 기본 기능만 유지 -->
+<!-- SEO 및 소셜 미디어 메타태그 -->
+<meta name="theme-color" content="#b19cd9">
+<meta name="msapplication-TileColor" content="#b19cd9">
+<meta name="robots" content="index, follow">
+<meta name="googlebot" content="index, follow">
+
+<!-- 구글 서치 콘솔 인증 -->
+<meta name="google-site-verification" content="a7104159240e3ca6">
+
+<!-- 구조화된 데이터 (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "{{ site.title }}",
+  "description": "{{ site.description }}",
+  "url": "{{ site.url }}",
+  "author": {
+    "@type": "Person",
+    "name": "{{ site.author.name }}"
+  },
+  "publisher": {
+    "@type": "Person",
+    "name": "{{ site.author.name }}"
+  }
+}
+</script>
+
+<!-- 프리로드 폰트 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- 스무스 스크롤링과 기본 기능 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // 부드러운 등장 애니메이션
@@ -37,11 +69,3 @@ document.addEventListener('DOMContentLoaded', function() {
     animateElements();
 });
 </script>
-
-<!-- 메타 태그 및 SEO -->
-<meta name="theme-color" content="#b19cd9">
-<meta name="msapplication-TileColor" content="#b19cd9">
-
-<!-- 프리로드 폰트 -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

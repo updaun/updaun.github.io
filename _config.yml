@@ -6,6 +6,21 @@ url: "https://updaun.github.io" # 실제 GitHub Pages URL로 변경하세요
 baseurl: "" # 리포지토리가 사용자 또는 조직 사이트인 경우 빈 문자열로 설정
 author:
   name: updaun
+  email: your-email@example.com # 실제 이메일로 변경하세요
+  twitter: updaun # 트위터 계정이 있다면
+
+# SEO 설정
+lang: ko_KR
+locale: ko_KR
+timezone: Asia/Seoul
+
+# Open Graph / Twitter Card 설정
+twitter:
+  username: updaun # 트위터 계정이 있다면
+  card: summary_large_image
+
+# 구글 사이트 검증
+google_site_verification: a7104159240e3ca6
 
 # 블로그 기능 설정
 permalink: /:categories/:year/:month/:day/:title/
@@ -17,6 +32,7 @@ plugins:
   - jekyll-paginate
   - jekyll-feed
   - jekyll-seo-tag
+  - jekyll-sitemap
 
 # 블로그 카테고리 설정
 collections:

@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Sitemap 위치
+Sitemap: https://updaun.github.io/sitemap.xml
+
+# 특정 경로 차단 (필요시)
+Disallow: /admin/
+Disallow: /_site/
+Disallow: /assets/css/*.map
