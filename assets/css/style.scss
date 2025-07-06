@@ -62,10 +62,10 @@
     
     /* 다크모드 버튼 전용 변수 */
     --button-text-color: #ffffff;
-    --button-bg-gradient: linear-gradient(135deg, #9d8dc7, #c7b9e8);
-    --button-shadow: 0 4px 15px rgba(157, 141, 199, 0.4);
-    --button-hover-gradient: linear-gradient(135deg, #b8a9d9, #d4c7f0);
-    --button-hover-shadow: 0 8px 25px rgba(184, 169, 217, 0.5);
+    --button-bg-gradient: linear-gradient(135deg, #4a3d6b, #6b5b95);
+    --button-shadow: 0 4px 15px rgba(74, 61, 107, 0.5);
+    --button-hover-gradient: linear-gradient(135deg, #5d4c7a, #7a6ba3);
+    --button-hover-shadow: 0 8px 25px rgba(93, 76, 122, 0.6);
 }
 
 /* 기본 스타일 */
@@ -1336,24 +1336,30 @@ blockquote {
     .btn, .btn-primary, .category-list a, .page-link, .post-link {
         color: #ffffff !important;
         font-weight: 700;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         background: var(--button-bg-gradient);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: var(--button-shadow);
     }
     
     .btn:hover, .btn-primary:hover, .category-list a:hover, .page-link:hover, .post-link:hover {
         color: #ffffff !important;
-        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
         background: var(--button-hover-gradient);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: var(--button-hover-shadow);
     }
     
     .search-btn {
         color: var(--nav-text);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        background: rgba(26, 22, 37, 0.7);
     }
     
     .search-btn:hover {
         color: #ffffff !important;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        background: var(--button-bg-gradient);
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 }
