@@ -46,6 +46,8 @@ GEM
       sassc (> 2.0.1, < 3.0)
     jekyll-seo-tag (2.7.1)
       jekyll (>= 3.8, < 5.0)
+    jekyll-sitemap (1.4.0)
+      jekyll (>= 3.7, < 5.0)
     jekyll-theme-cayman (0.2.0)
       jekyll (> 3.5, < 5.0)
       jekyll-seo-tag (~> 2.0)
@@ -82,7 +84,6 @@ PLATFORMS
   arm-linux-gnu
   arm-linux-musl
   arm64-darwin
-  ruby
   x86-linux-gnu
   x86-linux-musl
   x86_64-darwin
@@ -94,6 +95,7 @@ DEPENDENCIES
   jekyll-feed (~> 0.15.1)
   jekyll-paginate (~> 1.1.0)
   jekyll-seo-tag (~> 2.7.1)
+  jekyll-sitemap (~> 1.4.0)
   jekyll-theme-cayman
   webrick (~> 1.7)
 

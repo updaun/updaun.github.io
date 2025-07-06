@@ -138,6 +138,121 @@
                 
                 lastScrollY = currentScrollY;
             });
+
+            // 검색 기능
+            let searchData = [];
+            
+            // search.json 데이터 로드
+            fetch('{{ "/search.json" | relative_url }}')
+                .then(response => response.json())
+                .then(data => {
+                    searchData = data;
+                })
+                .catch(error => {
+                    console.error('검색 데이터 로드 실패:', error);
+                });
+
+            // 검색 실행 함수
+            function performSearch(query) {
+                if (!query || query.trim() === '') {
+                    displaySearchResults([]);
+                    return;
+                }
+
+                const normalizedQuery = query.toLowerCase().trim();
+                const results = searchData.filter(post => {
+                    return post.title.toLowerCase().includes(normalizedQuery) ||
+                           post.content.toLowerCase().includes(normalizedQuery) ||
+                           post.excerpt.toLowerCase().includes(normalizedQuery) ||
+                           (post.categories && post.categories.some(cat => 
+                               cat.toLowerCase().includes(normalizedQuery)
+                           ));
+                });
+
+                displaySearchResults(results);
+            }
+
+            // 검색 결과 표시 함수
+            function displaySearchResults(results) {
+                let resultsContainer = document.getElementById('searchResults');
+                
+                if (!resultsContainer) {
+                    // 검색 결과 컨테이너가 없으면 생성
+                    resultsContainer = document.createElement('div');
+                    resultsContainer.id = 'searchResults';
+                    resultsContainer.className = 'search-results';
+                    
+                    const searchContainer = document.querySelector('.search-container');
+                    searchContainer.appendChild(resultsContainer);
+                }
+
+                if (results.length === 0) {
+                    resultsContainer.innerHTML = '<div class="no-results">검색 결과가 없습니다.</div>';
+                    resultsContainer.style.display = 'block';
+                    return;
+                }
+
+                const resultsHTML = results.map(post => `
+                    <div class="search-result-item">
+                        <h3><a href="${post.url}">${post.title}</a></h3>
+                        <div class="search-result-meta">
+                            <span class="date">${post.date}</span>
+                            ${post.categories && post.categories.length > 0 ? 
+                                '<span class="categories">' + post.categories.join(', ') + '</span>' : ''}
+                        </div>
+                        <p class="search-result-excerpt">${post.excerpt}</p>
+                    </div>
+                `).join('');
+
+                resultsContainer.innerHTML = `
+                    <div class="search-results-header">
+                        <h3>검색 결과 (${results.length}개)</h3>
+                    </div>
+                    <div class="search-results-list">
+                        ${resultsHTML}
+                    </div>
+                `;
+                resultsContainer.style.display = 'block';
+            }
+
+            // 검색 이벤트 리스너
+            const searchSubmit = document.getElementById('searchSubmit');
+            if (searchSubmit) {
+                searchSubmit.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+            }
+
+            // 엔터 키로 검색
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        performSearch(this.value);
+                    }
+                });
+
+                // 실시간 검색 (입력할 때마다)
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        performSearch(this.value);
+                    }, 300); // 300ms 디바운스
+                });
+            }
+
+            // 검색 오버레이 닫을 때 결과 초기화
+            if (searchClose) {
+                searchClose.addEventListener('click', function() {
+                    searchOverlay.classList.remove('active');
+                    searchInput.value = '';
+                    const resultsContainer = document.getElementById('searchResults');
+                    if (resultsContainer) {
+                        resultsContainer.style.display = 'none';
+                    }
+                });
+            }
         });
     </script>
 </head>
