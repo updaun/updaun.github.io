@@ -245,5 +245,33 @@ document.addEventListener('DOMContentLoaded', function() {
             card.style.transform = 'translateY(0) scale(1)';
         }
     });
+    
+    // 포스트 카드 클릭 이벤트
+    document.addEventListener('click', function(e) {
+        const card = e.target.closest('.post-card');
+        if (card) {
+            // 링크나 버튼을 클릭한 경우는 제외
+            if (e.target.tagName === 'A' || e.target.closest('a') || 
+                e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                return;
+            }
+            
+            // 포스트 URL 찾기
+            const postLink = card.querySelector('.post-card-title a') || card.querySelector('.read-more-btn');
+            if (postLink) {
+                // 새 탭에서 열기를 원하는 경우 (Ctrl/Cmd 클릭)
+                if (e.ctrlKey || e.metaKey) {
+                    window.open(postLink.href, '_blank');
+                } else {
+                    window.location.href = postLink.href;
+                }
+            }
+        }
+    });
+    
+    // 카드에 커서 포인터 스타일 추가
+    document.querySelectorAll('.post-card').forEach(card => {
+        card.style.cursor = 'pointer';
+    });
 });
 </script>
