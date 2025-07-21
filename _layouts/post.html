@@ -2,102 +2,124 @@
 layout: default
 ---
 
-<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-    <header class="post-header">
-        <h1 class="post-title p-name" itemprop="name headline">{{ page.title | escape }}</h1>
-        <div class="post-meta">
-            <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
-                {{ page.date | date: "%Y년 %m월 %d일" }}
-            </time>
-            {% if page.last_modified_at %}
-            <meta itemprop="dateModified" content="{{ page.last_modified_at | date_to_xmlschema }}">
-            {% else %}
-            <meta itemprop="dateModified" content="{{ page.date | date_to_xmlschema }}">
-            {% endif %}
-            
-            {% if page.author %}
-            • <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-                <span class="p-author h-card" itemprop="name">{{ page.author }}</span>
-            </span>
-            {% endif %}
-            
-            <!-- 읽는 시간 표시 -->
-            <span class="reading-time">
-                • ⏱️ {{ page.content | strip_html | number_of_words | divided_by: 200 | plus: 1 }}분 읽기
-            </span>
-            
-            <!-- 단어 수 (SEO용, 숨김) -->
-            <meta itemprop="wordCount" content="{{ page.content | strip_html | number_of_words }}">
+<div class="post-layout">
+    <aside class="post-sidebar">
+        <div class="post-sidebar-content">
+            <!-- 목차가 여기에 동적으로 삽입됩니다 -->
+            <div id="table-of-contents-sidebar" class="toc-sidebar">
+                <div class="toc-placeholder">
+                    <div class="toc-placeholder-content">
+                        <div class="toc-placeholder-icon">📖</div>
+                        <div class="toc-placeholder-text">
+                            <h4>목차 준비중</h4>
+                            <p>헤딩이 충분하면<br>목차가 표시됩니다</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        {% if page.categories %}
-        <div class="post-categories" itemprop="articleSection">
-            {% for category in page.categories %}
-            <a href="{{ site.baseurl }}/category/{{ category | slugify }}" class="post-category">{{ category }}</a>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        {% if page.tags %}
-        <div class="post-tags" itemprop="keywords">
-            {% for tag in page.tags %}
-            <a href="{{ site.baseurl }}/tag/{{ tag | slugify }}" class="tag-item">#{{ tag }}</a>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        {% if page.excerpt %}
-        <div class="post-excerpt" itemprop="description">
-            {{ page.excerpt | strip_html | truncatewords: 30 }}
-        </div>
-        {% endif %}
-    </header>
+    </aside>
 
-    <div class="post-content e-content" itemprop="articleBody">
-        {{ content }}
-    </div>
-
-    <!-- 소셜 공유 버튼 -->
-    <div class="post-share">
-        <h3>이 글을 공유해보세요!</h3>
-        <div class="share-buttons">
-            <a href="https://twitter.com/intent/tweet?text={{ page.title | url_encode }}&url={{ page.url | absolute_url }}&hashtags={% if page.tags %}{{ page.tags | join: ',' }}{% endif %}" 
-               class="share-btn twitter" target="_blank" rel="noopener" aria-label="트위터에 공유">
-                🐦 트위터
-            </a>
-            <a href="https://www.facebook.com/sharer/sharer.php?u={{ page.url | absolute_url }}" 
-               class="share-btn facebook" target="_blank" rel="noopener" aria-label="페이스북에 공유">
-                📘 페이스북
-            </a>
-            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ page.url | absolute_url }}" 
-               class="share-btn linkedin" target="_blank" rel="noopener" aria-label="링크드인에 공유">
-                💼 링크드인
-            </a>
-            <a href="javascript:void(0)" onclick="copyToClipboard('{{ page.url | absolute_url }}')" 
-               class="share-btn copy" aria-label="링크 복사">
-                🔗 링크 복사
-            </a>
-        </div>
-    </div>
-
-    <!-- 관련 포스트 -->
-    {% assign related_posts = site.related_posts | where_exp: "post", "post.categories contains page.categories.first" | slice: 0, 3 %}
-    {% if related_posts.size > 0 %}
-    <div class="related-posts">
-        <h3>관련 포스트</h3>
-        <div class="related-posts-grid">
-            {% for post in related_posts %}
-            <article class="related-post">
-                <h4><a href="{{ post.url }}" itemprop="relatedLink">{{ post.title }}</a></h4>
-                <time>{{ post.date | date: "%Y.%m.%d" }}</time>
-                {% if post.excerpt %}
-                <p>{{ post.excerpt | strip_html | truncatewords: 15 }}</p>
+    <main class="post-main">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+            <header class="post-header">
+                <h1 class="post-title p-name" itemprop="name headline">{{ page.title | escape }}</h1>
+                <div class="post-meta">
+                    <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
+                        {{ page.date | date: "%Y년 %m월 %d일" }}
+                    </time>
+                    {% if page.last_modified_at %}
+                    <meta itemprop="dateModified" content="{{ page.last_modified_at | date_to_xmlschema }}">
+                    {% else %}
+                    <meta itemprop="dateModified" content="{{ page.date | date_to_xmlschema }}">
+                    {% endif %}
+                    
+                    {% if page.author %}
+                    • <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+                        <span class="p-author h-card" itemprop="name">{{ page.author }}</span>
+                    </span>
+                    {% endif %}
+                    
+                    <!-- 읽는 시간 표시 -->
+                    <span class="reading-time">
+                        • ⏱️ {{ page.content | strip_html | number_of_words | divided_by: 200 | plus: 1 }}분 읽기
+                    </span>
+                    
+                    <!-- 단어 수 (SEO용, 숨김) -->
+                    <meta itemprop="wordCount" content="{{ page.content | strip_html | number_of_words }}">
+                </div>
+                
+                {% if page.categories %}
+                <div class="post-categories" itemprop="articleSection">
+                    {% for category in page.categories %}
+                    <a href="{{ site.baseurl }}/category/{{ category | slugify }}" class="post-category">{{ category }}</a>
+                    {% endfor %}
+                </div>
                 {% endif %}
-            </article>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
+                
+                {% if page.tags %}
+                <div class="post-tags" itemprop="keywords">
+                    {% for tag in page.tags %}
+                    <a href="{{ site.baseurl }}/tag/{{ tag | slugify }}" class="tag-item">#{{ tag }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if page.excerpt %}
+                <div class="post-excerpt" itemprop="description">
+                    {{ page.excerpt | strip_html | truncatewords: 30 }}
+                </div>
+                {% endif %}
+            </header>
+
+            <div class="post-content e-content" itemprop="articleBody">
+                {{ content }}
+            </div>
+
+            <!-- 소셜 공유 버튼 -->
+            <div class="post-share">
+                <h3>이 글을 공유해보세요!</h3>
+                <div class="share-buttons">
+                    <a href="https://twitter.com/intent/tweet?text={{ page.title | url_encode }}&url={{ page.url | absolute_url }}&hashtags={% if page.tags %}{{ page.tags | join: ',' }}{% endif %}" 
+                       class="share-btn twitter" target="_blank" rel="noopener" aria-label="트위터에 공유">
+                        🐦 트위터
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ page.url | absolute_url }}" 
+                       class="share-btn facebook" target="_blank" rel="noopener" aria-label="페이스북에 공유">
+                        📘 페이스북
+                    </a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ page.url | absolute_url }}" 
+                       class="share-btn linkedin" target="_blank" rel="noopener" aria-label="링크드인에 공유">
+                        💼 링크드인
+                    </a>
+                    <a href="javascript:void(0)" onclick="copyToClipboard('{{ page.url | absolute_url }}')" 
+                       class="share-btn copy" aria-label="링크 복사">
+                        🔗 링크 복사
+                    </a>
+                </div>
+            </div>
+
+            <!-- 관련 포스트 -->
+            {% assign related_posts = site.related_posts | where_exp: "post", "post.categories contains page.categories.first" | slice: 0, 3 %}
+            {% if related_posts.size > 0 %}
+            <div class="related-posts">
+                <h3>관련 포스트</h3>
+                <div class="related-posts-grid">
+                    {% for post in related_posts %}
+                    <article class="related-post">
+                        <h4><a href="{{ post.url }}" itemprop="relatedLink">{{ post.title }}</a></h4>
+                        <time>{{ post.date | date: "%Y.%m.%d" }}</time>
+                        {% if post.excerpt %}
+                        <p>{{ post.excerpt | strip_html | truncatewords: 15 }}</p>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </article>
+    </main>
+</div>
 
     <!-- 네비게이션 -->
     <nav class="post-navigation" role="navigation">
@@ -223,12 +245,19 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// 목차 자동 생성 (h2, h3 태그 기준)
+// 목차 자동 생성 (h2, h3 태그 기준) - 사이드바에 생성
 document.addEventListener('DOMContentLoaded', function() {
     const content = document.querySelector('.post-content');
     const headings = content.querySelectorAll('h2, h3');
+    const tocSidebar = document.getElementById('table-of-contents-sidebar');
     
-    if (headings.length > 2) {
+    if (headings.length > 2 && tocSidebar) {
+        // placeholder 제거
+        const placeholder = tocSidebar.querySelector('.toc-placeholder');
+        if (placeholder) {
+            placeholder.remove();
+        }
+        
         const toc = document.createElement('div');
         toc.className = 'table-of-contents';
         toc.innerHTML = '<h3>📋 목차</h3><ul class="toc-list"></ul>';
@@ -245,13 +274,37 @@ document.addEventListener('DOMContentLoaded', function() {
             tocList.appendChild(li);
         });
         
-        // 첫 번째 h2 앞에 목차 삽입
-        const firstH2 = content.querySelector('h2');
-        if (firstH2) {
-            content.insertBefore(toc, firstH2);
-        } else {
-            content.insertBefore(toc, content.firstChild);
-        }
+        // 사이드바에 목차 삽입
+        tocSidebar.appendChild(toc);
+        
+        // 현재 보고 있는 섹션 하이라이트
+        const observerOptions = {
+            rootMargin: '-20% 0px -60% 0px',
+            threshold: 0
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.id;
+                const tocLink = tocSidebar.querySelector(`a[href="#${id}"]`);
+                
+                if (entry.isIntersecting) {
+                    // 모든 링크에서 active 클래스 제거
+                    tocSidebar.querySelectorAll('a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    // 현재 링크에 active 클래스 추가
+                    if (tocLink) {
+                        tocLink.classList.add('active');
+                    }
+                }
+            });
+        }, observerOptions);
+        
+        // 모든 헤딩 요소 관찰 시작
+        headings.forEach(heading => {
+            observer.observe(heading);
+        });
     }
     
     // 스무스 스크롤

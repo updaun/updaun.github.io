@@ -1914,22 +1914,213 @@ blockquote {
     display: block;
 }
 
-/* 목차 스타일 */
-.table-of-contents {
+/* 포스트 전용 레이아웃 */
+.post-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 30px;
+    align-items: start;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.post-sidebar {
+    position: sticky;
+    top: 90px; /* 헤더 높이 고려 */
+    background: var(--background-color);
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    height: fit-content;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    /* 커스텀 스크롤바 */
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) var(--accent-color);
+}
+
+.post-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.post-sidebar::-webkit-scrollbar-track {
+    background: var(--accent-color);
+    border-radius: 3px;
+}
+
+.post-sidebar::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.post-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+[data-theme="dark"] .post-sidebar {
+    background: var(--card-bg-dark);
+}
+
+.post-sidebar-content {
+    padding: 20px;
+}
+
+.post-main {
+    background: var(--background-color);
+    border-radius: 15px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    padding: 30px;
+    min-height: 500px;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .post-main {
+    background: var(--card-bg-dark);
+}
+
+/* 사이드바 목차 스타일 */
+.toc-sidebar .table-of-contents {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    position: static;
+}
+
+.toc-sidebar .table-of-contents h3 {
+    color: var(--heading-color);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.toc-sidebar .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.toc-sidebar .toc-list li {
+    margin: 0.3rem 0;
+}
+
+.toc-sidebar .toc-h2 {
+    margin-left: 0;
+}
+
+.toc-sidebar .toc-h3 {
+    margin-left: 1rem;
+}
+
+.toc-sidebar .toc-list a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    display: block;
+    padding: 0.4rem 0.6rem;
+    border-left: 3px solid transparent;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.toc-sidebar .toc-list a:hover {
+    color: var(--primary-color);
+    background: var(--accent-color);
+    border-left-color: var(--primary-color);
+    transform: translateX(5px);
+}
+
+.toc-sidebar .toc-list a.active {
+    color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    border-left-color: var(--primary-color);
+    background: var(--accent-color);
+    font-weight: 600;
+    transform: translateX(8px);
+}
+
+/* 목차 placeholder 스타일 */
+.toc-placeholder {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.toc-placeholder-content {
+    opacity: 0.6;
+}
+
+.toc-placeholder-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.toc-placeholder-text h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--heading-color);
+    font-size: 0.9rem;
+}
+
+.toc-placeholder-text p {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .post-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 0 15px;
+    }
+    
+    .post-sidebar {
+        position: static;
+        order: 2;
+        margin-top: 20px;
+    }
+    
+    .post-main {
+        padding: 20px;
+    }
+    
+    .toc-sidebar .table-of-contents {
+        background: var(--accent-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    [data-theme="dark"] .toc-sidebar .table-of-contents {
+        background: var(--card-bg-dark);
+    }
+}
+
+/* 기존 목차 스타일 (인라인 목차용 - 더 이상 사용되지 않지만 호환성 유지) */
+.post-content .table-of-contents {
     background: var(--accent-color);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.5rem;
     margin: 2rem 0;
-    position: sticky;
-    top: 100px;
+    position: static; /* sticky 제거 */
 }
 
-[data-theme="dark"] .table-of-contents {
+[data-theme="dark"] .post-content .table-of-contents {
     background: var(--card-bg-dark);
 }
 
-.table-of-contents h3 {
+.post-content .table-of-contents h3 {
     margin: 0 0 1rem 0;
     color: var(--heading-color);
     font-size: 1.1rem;
