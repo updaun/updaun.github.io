@@ -1,6 +1,6 @@
 theme: jekyll-theme-cayman
 show_downloads: false
-title: "Up & Daun - 개발자를 위한 클라우드 블로그"
+title: "Up & Daun"
 description: "AWS Solution Architect Associate 자격증 준비, 클라우드 아키텍처, Python 개발, 컴퓨터 비전 등 최신 기술 트렌드를 다루는 개발자 블로그입니다."
 url: "https://updaun.github.io"
 baseurl: ""

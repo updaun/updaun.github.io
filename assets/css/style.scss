@@ -14,7 +14,6 @@
     --border-color: #e0d4f0;
     --card-shadow: 0 2px 8px rgba(139, 122, 184, 0.15);
     --gradient-bg: linear-gradient(135deg, #f8f6ff 0%, #ede7f6 100%);
-    --sidebar-bg: #faf7ff;
     --link-color: #6b5b95;
     --link-hover: #8b7ab8;
     
@@ -48,7 +47,7 @@
     --border-color: #3d3551;
     --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     --gradient-bg: linear-gradient(135deg, #1a1625 0%, #2d2542 100%);
-    --sidebar-bg: #211d2e;
+    --card-bg-dark: #211d2e;
     --link-color: #b8a9d9;
     --link-hover: #d4c7f0;
     
@@ -586,7 +585,7 @@ a:hover {
 
 /* Footer 스타일 */
 .site-footer {
-    background: var(--sidebar-bg);
+    background: var(--card-bg-dark);
     border-top: 1px solid var(--border-color);
     padding: 40px 0;
     margin-top: 50px;
@@ -707,10 +706,7 @@ body {
 
 /* 메인 콘텐츠 레이아웃 */
 .content-wrapper {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 30px;
-    align-items: start;
+    display: block;
 }
 
 .main-content {
@@ -722,43 +718,13 @@ body {
     min-height: 500px;
     color: var(--text-color);
     transition: all 0.3s ease;
+    width: 100%;
+    max-width: 100%;
 }
 
 /* 다크모드에서 메인 콘텐츠 카드 배경 */
 [data-theme="dark"] .main-content {
-    background: var(--sidebar-bg);
-}
-
-/* 사이드바 스타일 */
-.sidebar {
-    background: var(--sidebar-bg);
-    border-radius: 15px;
-    border: 1px solid var(--border-color);
-    position: sticky;
-    top: 100px;
-    transition: all 0.3s ease;
-}
-
-.sidebar-content {
-    padding: 20px;
-}
-
-.sidebar-section {
-    margin-bottom: 25px;
-}
-
-.sidebar-section:last-child {
-    margin-bottom: 0;
-}
-
-.sidebar-section h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--heading-color);
-    margin-bottom: 15px;
-    margin-top: 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--primary-color);
+    background: var(--card-bg-dark);
 }
 
 .category-list, .recent-posts {
@@ -857,7 +823,7 @@ body {
 
 /* 다크모드에서 포스트 카드 배경 */
 [data-theme="dark"] .post-list>li {
-    background: var(--sidebar-bg);
+    background: var(--card-bg-dark);
 }
 
 .post-list>li::before {
@@ -1046,7 +1012,7 @@ input:focus, textarea:focus, select:focus {
 [data-theme="dark"] input,
 [data-theme="dark"] textarea,
 [data-theme="dark"] select {
-    background: var(--sidebar-bg);
+    background: var(--card-bg-dark);
 }
 
 /* 코드 블럭과 문법 강조 */
@@ -1428,7 +1394,7 @@ blockquote {
 }
 
 [data-theme="dark"] .post-card {
-    background: var(--sidebar-bg);
+    background: var(--card-bg-dark);
     border-color: var(--border-color);
 }
 
@@ -1692,7 +1658,7 @@ blockquote {
 }
 
 [data-theme="dark"] .no-more-posts {
-    background: var(--sidebar-bg);
+    background: var(--card-bg-dark);
 }
 
 @keyframes spin {
@@ -1840,7 +1806,7 @@ blockquote {
 .related-posts {
     margin: 3rem 0;
     padding: 2rem;
-    background: var(--sidebar-bg);
+    background: var(--card-bg-dark);
     border-radius: 12px;
     border: 1px solid var(--border-color);
 }
@@ -1911,7 +1877,7 @@ blockquote {
 .prev-post, .next-post {
     display: block;
     padding: 1.5rem;
-    background: var(--sidebar-bg);
+    background: var(--card-bg-dark);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     text-decoration: none;
@@ -1960,7 +1926,7 @@ blockquote {
 }
 
 [data-theme="dark"] .table-of-contents {
-    background: var(--sidebar-bg);
+    background: var(--card-bg-dark);
 }
 
 .table-of-contents h3 {
