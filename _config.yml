@@ -1,31 +1,74 @@
 theme: jekyll-theme-cayman
 show_downloads: false
-title: Up & Daun
-description: AWS Solution Architect Associate 자격증 공부 내용을 정리하는 블로그
-url: "https://updaun.github.io" # 실제 GitHub Pages URL로 변경하세요
-baseurl: "" # 리포지토리가 사용자 또는 조직 사이트인 경우 빈 문자열로 설정
-author:
-  name: updaun
-  email: your-email@example.com # 실제 이메일로 변경하세요
-  twitter: updaun # 트위터 계정이 있다면
+title: "Up & Daun - 개발자를 위한 클라우드 블로그"
+description: "AWS Solution Architect Associate 자격증 준비, 클라우드 아키텍처, Python 개발, 컴퓨터 비전 등 최신 기술 트렌드를 다루는 개발자 블로그입니다."
+url: "https://updaun.github.io"
+baseurl: ""
 
-# SEO 설정
+# 작성자 정보
+author:
+  name: "updaun"
+  email: "your-email@example.com"
+  twitter: "updaun"
+  github: "updaun"
+  linkedin: "updaun"
+  bio: "클라우드 아키텍트이자 개발자. AWS, Python, 머신러닝에 관심이 많습니다."
+
+# 사이트 설정
 lang: ko_KR
 locale: ko_KR
 timezone: Asia/Seoul
+encoding: utf-8
+
+# SEO 설정 (중요!)
+seo:
+  type: "Blog"
+  name: "Up & Daun"
+  headline: "개발자를 위한 클라우드 및 기술 블로그"
+  description: "AWS, Python, 머신러닝, 웹 개발 등 최신 기술 트렌드와 실무 경험을 공유하는 블로그"
+  image: "/assets/img/seo-image.png"
 
 # Open Graph / Twitter Card 설정
-twitter:
-  username: updaun # 트위터 계정이 있다면
-  card: summary_large_image
+og:
+  type: "website"
+  locale: "ko_KR"
+  site_name: "Up & Daun"
+  image: "/assets/img/og-image.png"
+  image_width: 1200
+  image_height: 630
 
-# 구글 사이트 검증
-google_site_verification: a7104159240e3ca6
+twitter:
+  username: "updaun"
+  card: "summary_large_image"
+  creator: "@updaun"
+
+# 구글 및 검색엔진 최적화
+google_site_verification: "a7104159240e3ca6"
+naver_site_verification: "" # 네이버 웹마스터 도구 인증코드 (선택사항)
+bing_site_verification: "" # 빙 웹마스터 도구 인증코드 (선택사항)
+
+# 구글 애널리틱스 (추후 설정)
+google_analytics: "" # GA4 측정 ID
+
+# 사이트맵 설정
+sitemap:
+  priority: 1.0
+  changefreq: 'daily'
+  lastmod: 2025-01-17
 
 # 블로그 기능 설정
 permalink: /:categories/:year/:month/:day/:title/
-paginate: 5
-paginate_path: "/blog/page:num/"
+paginate: 12
+paginate_path: "/page:num/"
+
+# 피드 설정
+feed:
+  path: feed.xml
+  posts_limit: 20
+
+# 검색 기능 설정
+search: true
+search_full_content: true
 
 # jekyll 플러그인 설정
 plugins:
@@ -33,9 +76,94 @@ plugins:
   - jekyll-feed
   - jekyll-seo-tag
   - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-redirect-from
 
-# 블로그 카테고리 설정
+# 제외할 파일들
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - .gitignore
+  - README.md
+  - create_favicon.py
+
+# 포함할 파일들
+include:
+  - _pages
+  - .htaccess
+  - robots.txt
+  - sitemap.xml
+
+# 마크다운 설정
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    line_numbers: true
+
+# 컬렉션 설정
 collections:
   categories:
     output: true
-    permalink: /categories/:name/
+    permalink: /category/:name/
+  tags:
+    output: true
+    permalink: /tag/:name/
+
+# 기본값 설정
+defaults:
+  # 포스트 기본값
+  - scope:
+      path: "_posts"
+      type: "posts"
+    values:
+      layout: "post"
+      author: "updaun"
+      show_excerpts: true
+      comments: true
+      share: true
+      related: true
+      toc: true
+      sidebar:
+        nav: "docs"
+  
+  # 페이지 기본값  
+  - scope:
+      path: "_pages"
+      type: "pages"
+    values:
+      layout: "page"
+      author: "updaun"
+      sidebar:
+        nav: "docs"
+
+# 압축 설정 (성능 최적화)
+compress_html:
+  clippings: all
+  comments: ["<!-- ", " -->"]
+  endings: all
+  ignore:
+    envs: [development]
+  blanklines: false
+  profile: false
+  startings: [html, head, body]
+
+# 소셜 미디어 링크
+social:
+  - title: "GitHub"
+    url: "https://github.com/updaun"
+    icon: "fab fa-github"
+  - title: "LinkedIn" 
+    url: "https://www.linkedin.com/in/updaun"
+    icon: "fab fa-linkedin"
+  - title: "Twitter"
+    url: "https://twitter.com/updaun"
+    icon: "fab fa-twitter"

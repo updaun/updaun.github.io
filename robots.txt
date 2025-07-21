@@ -1,10 +1,46 @@
 User-agent: *
 Allow: /
 
-# Sitemap 위치
-Sitemap: https://updaun.github.io/sitemap.xml
+# 크롤링 속도 제한 (1초에 1번 요청)
+Crawl-delay: 1
 
-# 특정 경로 차단 (필요시)
+# 우선순위가 높은 페이지들
+Allow: /category/
+Allow: /tag/
+Allow: /search.json
+Allow: /feed.xml
+
+# 차단할 파일들
 Disallow: /admin/
 Disallow: /_site/
 Disallow: /assets/css/*.map
+Disallow: /Gemfile*
+Disallow: /node_modules/
+Disallow: /vendor/
+Disallow: /.git/
+Disallow: /.sass-cache/
+Disallow: /create_favicon.py
+
+# 중요한 리소스 허용
+Allow: /assets/css/style.css
+Allow: /assets/img/
+Allow: /assets/js/
+
+# 사이트맵 위치
+Sitemap: https://updaun.github.io/sitemap.xml
+Sitemap: https://updaun.github.io/feed.xml
+
+# 구글봇 특별 설정
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# 빙봇 특별 설정  
+User-agent: bingbot
+Allow: /
+Crawl-delay: 1
+
+# 네이버봇 특별 설정
+User-agent: Yeti
+Allow: /
+Crawl-delay: 1
