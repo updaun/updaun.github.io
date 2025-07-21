@@ -832,8 +832,9 @@ body {
     }
 }
 
-/* 포스트 리스트 스타일 */
+/* 포스트 리스트 스타일 (기존 - 사용 안함) */
 .post-list {
+    display: none; /* 새로운 카드 스타일로 대체 */
     margin: 0;
     padding: 0;
     list-style: none;
@@ -1361,5 +1362,411 @@ blockquote {
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         background: var(--button-bg-gradient);
         border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+}
+
+/* ===========================
+   새로운 포스트 카드 스타일
+   =========================== */
+
+/* 홈페이지 히어로 섹션 */
+.hero-section {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem 0;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--heading-color);
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 0;
+}
+
+/* 포스트 컨테이너 */
+.posts-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* 포스트 그리드 */
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+/* 포스트 카드 */
+.post-card {
+    background: var(--background-color);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    height: fit-content;
+    cursor: pointer;
+}
+
+.post-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(139, 122, 184, 0.2);
+    border-color: var(--primary-light);
+}
+
+[data-theme="dark"] .post-card {
+    background: var(--sidebar-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .post-card:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    border-color: var(--primary-color);
+}
+
+/* 포스트 카드 이미지 */
+.post-card-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background: var(--gradient-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.post-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.post-card:hover .post-card-image img {
+    transform: scale(1.05);
+}
+
+.post-card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--accent-color), var(--primary-light));
+}
+
+.post-card-icon {
+    font-size: 3rem;
+    opacity: 0.7;
+}
+
+/* 포스트 카드 콘텐츠 */
+.post-card-content {
+    padding: 1.5rem;
+}
+
+/* 포스트 메타 정보 */
+.post-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.post-date {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.post-date::before {
+    content: '📅';
+    font-size: 0.875rem;
+}
+
+/* 포스트 카테고리 */
+.post-categories {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.post-category {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary-color);
+    background: var(--accent-color);
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    border: 1px solid var(--primary-light);
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .post-category {
+    color: var(--primary-light);
+    background: var(--primary-dark);
+    border-color: var(--primary-color);
+}
+
+.post-category:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* 포스트 제목 */
+.post-card-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.post-card-title a {
+    color: var(--heading-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.post-card-title a:hover {
+    color: var(--primary-color);
+}
+
+/* 포스트 요약 */
+.post-card-excerpt {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin: 0 0 1.5rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 포스트 카드 푸터 */
+.post-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* 더 읽기 버튼 */
+.read-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: transparent;
+    border: 2px solid var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.read-more-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateX(4px);
+}
+
+.read-more-btn .arrow {
+    transition: transform 0.3s ease;
+}
+
+.read-more-btn:hover .arrow {
+    transform: translateX(4px);
+}
+
+/* 포스트 통계 */
+.post-stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.read-time {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.read-time::before {
+    content: '⏱️';
+    font-size: 0.8rem;
+}
+
+/* 더 보기 버튼 컨테이너 */
+.load-more-container {
+    display: flex;
+    justify-content: center;
+    margin: 3rem 0;
+}
+
+/* 더 보기 버튼 */
+.load-more-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(139, 122, 184, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.load-more-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 122, 184, 0.4);
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+}
+
+.load-more-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 로딩 스피너 */
+.spinner, .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-message, .no-more-posts {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+}
+
+.loading-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.no-more-posts {
+    background: var(--accent-color);
+    border-radius: 12px;
+    margin: 2rem 0;
+}
+
+[data-theme="dark"] .no-more-posts {
+    background: var(--sidebar-bg);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .posts-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .post-card {
+        margin: 0 0.5rem;
+    }
+    
+    .post-card-content {
+        padding: 1.25rem;
+    }
+    
+    .post-card-footer {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .posts-container {
+        padding: 0 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-section {
+        margin-bottom: 2rem;
+        padding: 1rem 0;
+    }
+    
+    .post-card-image {
+        height: 160px;
+    }
+    
+    .post-card-content {
+        padding: 1rem;
+    }
+    
+    .load-more-btn {
+        padding: 0.875rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* 애니메이션 효과 */
+.post-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.post-card:nth-child(1) { animation-delay: 0.1s; }
+.post-card:nth-child(2) { animation-delay: 0.2s; }
+.post-card:nth-child(3) { animation-delay: 0.3s; }
+.post-card:nth-child(4) { animation-delay: 0.4s; }
+.post-card:nth-child(5) { animation-delay: 0.5s; }
+.post-card:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

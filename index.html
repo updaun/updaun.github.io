@@ -4,26 +4,246 @@ title: Home
 ---
 
 <div class="home">
-    <h1 class="page-heading">✨ 최근 포스트</h1>
+    <div class="hero-section">
+        <h1 class="hero-title">✨ 최근 포스트</h1>
+        <p class="hero-subtitle">개발과 클라우드에 대한 이야기를 공유합니다</p>
+    </div>
 
-    <ul class="post-list">
-        {% for post in site.posts limit:10 %}
-        <li>
-            <div class="post-meta">{{ post.date | date: "%Y년 %m월 %d일" }}</div>
-            <h2>
-                <a class="post-link" href="{{ post.url | relative_url }}">{{ post.title }}</a>
-            </h2>
-            {% if post.categories %}
-            <div class="post-categories">
-                {% for category in post.categories %}
-                <span class="post-category">{{ category }}</span>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% if post.excerpt %}
-            <p class="post-excerpt">{{ post.excerpt | strip_html | truncatewords: 30 }}</p>
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
+    <div class="posts-container" id="postsContainer">
+        <div class="posts-grid" id="postsGrid">
+            {% for post in site.posts limit:6 %}
+            <article class="post-card" data-categories="{% for category in post.categories %}{{ category | downcase }}{% unless forloop.last %} {% endunless %}{% endfor %}">
+                <div class="post-card-image">
+                    {% if post.image %}
+                        <img src="{{ post.image | relative_url }}" alt="{{ post.title }}" loading="lazy">
+                    {% else %}
+                        <div class="post-card-placeholder">
+                            <span class="post-card-icon">📝</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="post-card-content">
+                    <div class="post-card-meta">
+                        <time class="post-date">{{ post.date | date: "%Y.%m.%d" }}</time>
+                        {% if post.categories %}
+                        <div class="post-categories">
+                            {% for category in post.categories %}
+                            <span class="post-category">{{ category }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <h2 class="post-card-title">
+                        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+                    </h2>
+                    
+                    {% if post.excerpt %}
+                    <p class="post-card-excerpt">{{ post.excerpt | strip_html | truncatewords: 25 }}</p>
+                    {% endif %}
+                    
+                    <div class="post-card-footer">
+                        <a href="{{ post.url | relative_url }}" class="read-more-btn">
+                            더 읽기 <span class="arrow">→</span>
+                        </a>
+                        <div class="post-stats">
+                            <span class="read-time">{{ post.content | number_of_words | divided_by: 200 | plus: 1 }}분 읽기</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        
+        <div class="load-more-container">
+            <button class="load-more-btn" id="loadMoreBtn" data-page="1">
+                <span class="load-more-text">더 많은 포스트 보기</span>
+                <div class="load-more-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                </div>
+            </button>
+        </div>
+        
+        <div class="loading-message" id="loadingMessage" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>포스트를 불러오는 중...</p>
+        </div>
+        
+        <div class="no-more-posts" id="noMorePosts" style="display: none;">
+            <p>모든 포스트를 확인했습니다! 🎉</p>
+        </div>
+    </div>
 </div>
+
+<!-- 포스트 데이터 (JSON) -->
+<script id="posts-data" type="application/json">
+[
+    {% for post in site.posts %}
+    {
+        "title": {{ post.title | jsonify }},
+        "url": "{{ post.url | relative_url }}",
+        "date": "{{ post.date | date: '%Y.%m.%d' }}",
+        "excerpt": {{ post.excerpt | strip_html | truncatewords: 25 | jsonify }},
+        "categories": [{% for category in post.categories %}"{{ category }}"{% unless forloop.last %},{% endunless %}{% endfor %}],
+        "image": {% if post.image %}"{{ post.image | relative_url }}"{% else %}null{% endif %},
+        "readTime": "{{ post.content | number_of_words | divided_by: 200 | plus: 1 }}분 읽기"
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+]
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const postsGrid = document.getElementById('postsGrid');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const noMorePosts = document.getElementById('noMorePosts');
+    const loadMoreSpinner = loadMoreBtn.querySelector('.load-more-spinner');
+    const loadMoreText = loadMoreBtn.querySelector('.load-more-text');
+    
+    // JSON 데이터 파싱
+    const postsData = JSON.parse(document.getElementById('posts-data').textContent);
+    let currentPage = 1;
+    const postsPerPage = 6;
+    let isLoading = false;
+    
+    // 포스트 카드 HTML 생성 함수
+    function createPostCard(post) {
+        const categoriesHtml = post.categories.map(cat => 
+            `<span class="post-category">${cat}</span>`
+        ).join('');
+        
+        const imageHtml = post.image 
+            ? `<img src="${post.image}" alt="${post.title}" loading="lazy">`
+            : `<div class="post-card-placeholder"><span class="post-card-icon">📝</span></div>`;
+            
+        return `
+            <article class="post-card" data-categories="${post.categories.join(' ').toLowerCase()}">
+                <div class="post-card-image">
+                    ${imageHtml}
+                </div>
+                
+                <div class="post-card-content">
+                    <div class="post-card-meta">
+                        <time class="post-date">${post.date}</time>
+                        ${categoriesHtml ? `<div class="post-categories">${categoriesHtml}</div>` : ''}
+                    </div>
+                    
+                    <h2 class="post-card-title">
+                        <a href="${post.url}">${post.title}</a>
+                    </h2>
+                    
+                    <p class="post-card-excerpt">${post.excerpt}</p>
+                    
+                    <div class="post-card-footer">
+                        <a href="${post.url}" class="read-more-btn">
+                            더 읽기 <span class="arrow">→</span>
+                        </a>
+                        <div class="post-stats">
+                            <span class="read-time">${post.readTime}</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        `;
+    }
+    
+    // 더 많은 포스트 로드
+    function loadMorePosts() {
+        if (isLoading) return;
+        
+        isLoading = true;
+        loadMoreSpinner.style.display = 'block';
+        loadMoreText.textContent = '로딩중...';
+        loadMoreBtn.disabled = true;
+        
+        // 로딩 지연 효과 (실제 상황에서는 필요 없음)
+        setTimeout(() => {
+            const start = currentPage * postsPerPage;
+            const end = start + postsPerPage;
+            const nextPosts = postsData.slice(start, end);
+            
+            if (nextPosts.length === 0) {
+                // 더 이상 로드할 포스트가 없음
+                loadMoreBtn.style.display = 'none';
+                noMorePosts.style.display = 'block';
+            } else {
+                // 새 포스트 카드 추가
+                nextPosts.forEach(post => {
+                    const cardElement = document.createElement('div');
+                    cardElement.innerHTML = createPostCard(post);
+                    const card = cardElement.firstElementChild;
+                    
+                    // 애니메이션 효과
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    
+                    postsGrid.appendChild(card);
+                    
+                    // 애니메이션 트리거
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.5s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                });
+                
+                currentPage++;
+                loadMoreBtn.dataset.page = currentPage;
+                
+                // 모든 포스트를 로드했는지 확인
+                if (end >= postsData.length) {
+                    loadMoreBtn.style.display = 'none';
+                    noMorePosts.style.display = 'block';
+                }
+            }
+            
+            // 로딩 상태 복원
+            isLoading = false;
+            loadMoreSpinner.style.display = 'none';
+            loadMoreText.textContent = '더 많은 포스트 보기';
+            loadMoreBtn.disabled = false;
+            
+        }, 800);
+    }
+    
+    // 무한 스크롤 구현
+    function handleScroll() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        
+        // 페이지 하단에 가까워지면 자동 로드
+        if (scrollTop + windowHeight >= documentHeight - 800) {
+            if (!isLoading && loadMoreBtn.style.display !== 'none') {
+                loadMorePosts();
+            }
+        }
+    }
+    
+    // 이벤트 리스너
+    loadMoreBtn.addEventListener('click', loadMorePosts);
+    
+    // 무한 스크롤 활성화 (옵션)
+    let isAutoScrollEnabled = true;
+    if (isAutoScrollEnabled) {
+        window.addEventListener('scroll', handleScroll);
+    }
+    
+    // 카드 호버 효과 개선
+    document.addEventListener('mouseover', function(e) {
+        const card = e.target.closest('.post-card');
+        if (card) {
+            card.style.transform = 'translateY(-8px) scale(1.02)';
+        }
+    });
+    
+    document.addEventListener('mouseout', function(e) {
+        const card = e.target.closest('.post-card');
+        if (card) {
+            card.style.transform = 'translateY(0) scale(1)';
+        }
+    });
+});
+</script>
