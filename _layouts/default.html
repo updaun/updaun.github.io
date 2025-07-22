@@ -367,12 +367,26 @@
             }
         });
 
-        // 코드 블럭 복사 기능
-        document.addEventListener('DOMContentLoaded', function() {
+        // 코드 블럭 복사 기능 초기화 플래그
+        let copyButtonsInitialized = false;
+        
+        // 코드 블럭 복사 기능 초기화 함수
+        function initializeCodeCopyButtons() {
+            if (copyButtonsInitialized) {
+                return; // 이미 초기화되었으면 건너뛰기
+            }
+            
+            copyButtonsInitialized = true;
+            
             // 모든 코드 블럭에 복사 버튼 추가
             const codeBlocks = document.querySelectorAll('.highlight, pre:not(.highlight)');
             
             codeBlocks.forEach(function(codeBlock) {
+                // 이미 복사 버튼이 있는지 확인
+                if (codeBlock.querySelector('.copy-button')) {
+                    return; // 이미 버튼이 있으면 건너뛰기
+                }
+                
                 // 복사 버튼 생성
                 const copyButton = document.createElement('button');
                 copyButton.className = 'copy-button';
@@ -449,7 +463,10 @@
                 // 복사 버튼을 코드 블럭에 추가
                 codeBlock.appendChild(copyButton);
             });
-        });
+        }
+        
+        // DOMContentLoaded 이벤트에서 코드 복사 버튼 초기화
+        document.addEventListener('DOMContentLoaded', initializeCodeCopyButtons);
     </script>
 </head>
 
@@ -474,41 +491,6 @@
                         </div>
                         <span class="brand-text">{{ site.title | escape }}</span>
                     </a>
-                </div>
-
-                <!-- 메인 네비게이션 -->
-                <div class="nav-menu" id="navMenu">
-                    <ul class="nav-list">
-                        <li class="nav-item">
-                            <a href="{{ '/' | relative_url }}" class="nav-link">
-                                <span class="nav-icon">🏠</span>
-                                <span class="nav-text">홈</span>
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a href="{{ '/aws-saa/' | relative_url }}" class="nav-link dropdown-toggle">
-                                <span class="nav-icon">☁️</span>
-                                <span class="nav-text">AWS SAA</span>
-                                <span class="dropdown-arrow">▼</span>
-                            </a>
-                            <div class="dropdown-menu">
-                                <a href="{{ '/aws-saa/' | relative_url }}" class="dropdown-item">전체 글</a>
-                                <a href="{{ '/aws-saa/test' | relative_url }}" class="dropdown-item">연습 문제</a>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <span class="nav-icon">📚</span>
-                                <span class="nav-text">블로그</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <span class="nav-icon">📧</span>
-                                <span class="nav-text">연락처</span>
-                            </a>
-                        </li>
-                    </ul>
                 </div>
 
                 <!-- 우측 유틸리티 -->

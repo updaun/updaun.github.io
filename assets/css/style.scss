@@ -720,6 +720,10 @@ body {
     transition: all 0.3s ease;
     width: 100%;
     max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 /* 다크모드에서 메인 콘텐츠 카드 배경 */
@@ -905,6 +909,26 @@ body {
 .post-content {
     margin-bottom: 30px;
     line-height: 1.8;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    max-width: 100%;
+}
+
+/* 텍스트 내용의 긴 URL이나 단어 처리 */
+.post-content p,
+.post-content li,
+.post-content div {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* 링크와 URL 처리 */
+.post-content a {
+    word-break: break-all;
+    overflow-wrap: break-word;
 }
 
 .post-content h1,
@@ -955,6 +979,10 @@ body {
     padding: 20px;
     overflow-x: auto;
     margin: 20px 0;
+    max-width: 100%;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-wrap: anywhere;
 }
 
 .post-content code {
@@ -963,6 +991,8 @@ body {
     border-radius: 4px;
     font-size: 0.9em;
     color: var(--primary-dark);
+    word-break: break-all;
+    overflow-wrap: anywhere;
 }
 
 .post-content pre code {
@@ -1042,6 +1072,10 @@ pre {
   font-size: 0.875rem;
   line-height: 1.5;
   margin: 1rem 0;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
   
   [data-theme="dark"] & {
     background-color: #1e1e1e;
@@ -1121,6 +1155,8 @@ code {
   border-radius: 4px;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.875em;
+  word-break: break-all;
+  overflow-wrap: anywhere;
   
   [data-theme="dark"] & {
     background-color: #2d2d2d;
@@ -1146,6 +1182,10 @@ pre code {
   overflow-x: auto;
   border: 1px solid #e9ecef;
   margin: 1rem 0;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
   
   [data-theme="dark"] & {
     background-color: #1e1e1e;
@@ -2435,5 +2475,99 @@ a:focus, button:focus {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
+    }
+}
+
+/* 테이블 반응형 처리 및 오버플로우 방지 */
+.post-content table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+    word-break: keep-all;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+}
+
+.post-content table thead {
+    background: var(--accent-color);
+}
+
+.post-content table th,
+.post-content table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 200px;
+}
+
+.post-content table th {
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+/* 테이블 컨테이너 래퍼 */
+.post-content .table-wrapper,
+.table-responsive {
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 1rem 0;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+/* 이미지 및 미디어 요소 반응형 처리 */
+.post-content img,
+.post-content video,
+.post-content iframe {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain;
+}
+
+/* 긴 URL이나 문자열이 포함된 요소들 */
+.post-content .highlight table,
+.post-content .rouge-table {
+    overflow-x: auto;
+    max-width: 100%;
+    white-space: nowrap;
+}
+
+/* blockquote 내용 처리 */
+.post-content blockquote {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+/* 리스트 항목 처리 */
+.post-content ul li,
+.post-content ol li {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* 모바일에서 테이블 추가 처리 */
+@media (max-width: 768px) {
+    .post-content table {
+        font-size: 0.875rem;
+        white-space: normal;
+    }
+    
+    .post-content table th,
+    .post-content table td {
+        padding: 0.5rem;
+        min-width: 100px;
+        max-width: 150px;
+        word-break: break-word;
+        white-space: normal;
     }
 }
