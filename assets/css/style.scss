@@ -973,12 +973,12 @@ body {
 }
 
 .post-content pre {
-    background: #f8f9fa;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 20px;
-    overflow-x: auto;
-    margin: 20px 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    overflow-x: visible;
+    margin: 0;
     max-width: 100%;
     white-space: pre-wrap;
     word-break: break-all;
@@ -996,9 +996,24 @@ body {
 }
 
 .post-content pre code {
-    background: none;
-    padding: 0;
-    color: inherit;
+    background: #f8f9fa !important;
+    color: #212529 !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+    display: block !important;
+    border: 1px solid #e9ecef !important;
+    margin: 1rem 0 !important;
+    overflow-x: auto !important;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    position: relative;
+}
+
+[data-theme="dark"] .post-content pre code {
+    background: #1e1e1e !important;
+    color: #d4d4d4 !important;
+    border: 1px solid #333 !important;
 }
 
 /* 페이지 타이틀과 헤딩 다크모드 강화 */
@@ -1059,19 +1074,19 @@ input:focus, textarea:focus, select:focus {
     background: var(--card-bg-dark);
 }
 
-/* 코드 블럭과 문법 강조 */
+/* 코드 블럭과 문법 강조 - pre 태그 스타일 최소화 */
 pre {
   position: relative;
-  background-color: #f8f9fa;
-  color: #212529;
-  padding: 1rem;
-  border-radius: 8px;
-  overflow-x: auto;
-  border: 1px solid #e9ecef;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  margin: 1rem 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  overflow-x: visible;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  margin: 0;
   max-width: 100%;
   white-space: pre-wrap;
   word-break: break-all;
@@ -1149,8 +1164,8 @@ pre {
 }
 
 code {
-  background-color: #f1f3f4;
-  color: #d73a49;
+  background-color: #f8f9fa;
+  color: #212529;
   padding: 0.2em 0.4em;
   border-radius: 4px;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
@@ -1164,32 +1179,59 @@ code {
   }
 }
 
-// Code inside pre should not have background
+// Code inside pre should have block styling
 pre code {
-  background-color: transparent !important;
-  color: inherit !important;
-  padding: 0;
-  border-radius: 0;
-  font-size: inherit;
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
+  padding: 1rem !important;
+  border-radius: 8px !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  display: block !important;
+  border: 1px solid #e9ecef !important;
+  margin: 1rem 0 !important;
+  overflow-x: auto !important;
+  
+  [data-theme="dark"] & {
+    background-color: #1e1e1e !important;
+    color: #d4d4d4 !important;
+    border: 1px solid #333 !important;
+  }
 }
 
 // Syntax highlighting classes
 .highlight {
   position: relative;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 1rem;
-  overflow-x: auto;
-  border: 1px solid #e9ecef;
-  margin: 1rem 0;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  overflow-x: visible;
+  border: none;
+  margin: 0;
   max-width: 100%;
   white-space: pre-wrap;
   word-break: break-all;
   overflow-wrap: anywhere;
   
-  [data-theme="dark"] & {
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+  // highlight 내의 코드 블럭 스타일
+  pre code {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+    display: block !important;
+    border: 1px solid #e9ecef !important;
+    margin: 1rem 0 !important;
+    overflow-x: auto !important;
+    position: relative;
+    
+    [data-theme="dark"] & {
+      background-color: #1e1e1e !important;
+      color: #d4d4d4 !important;
+      border: 1px solid #333 !important;
+    }
   }
   
   // 복사 버튼 스타일
