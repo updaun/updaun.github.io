@@ -107,7 +107,7 @@ kramdown:
   hard_wrap: false
   syntax_highlighter: rouge
   syntax_highlighter_opts:
-    line_numbers: true
+    line_numbers: false
 
 # 컬렉션 설정
 collections:

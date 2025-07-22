@@ -366,6 +366,90 @@
                 });
             }
         });
+
+        // 코드 블럭 복사 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            // 모든 코드 블럭에 복사 버튼 추가
+            const codeBlocks = document.querySelectorAll('.highlight, pre:not(.highlight)');
+            
+            codeBlocks.forEach(function(codeBlock) {
+                // 복사 버튼 생성
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button';
+                copyButton.innerHTML = `
+                    <svg class="copy-icon" viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                    <span class="copy-text">Copy</span>
+                `;
+                
+                // 복사 버튼 클릭 이벤트
+                copyButton.addEventListener('click', function() {
+                    // 코드 텍스트 추출
+                    let codeText = '';
+                    const codeElement = codeBlock.querySelector('code') || codeBlock;
+                    
+                    if (codeElement) {
+                        // Rouge table 구조인 경우 처리
+                        const rougeCode = codeElement.querySelector('.rouge-code');
+                        if (rougeCode) {
+                            codeText = rougeCode.textContent || rougeCode.innerText;
+                        } else {
+                            codeText = codeElement.textContent || codeElement.innerText;
+                        }
+                    }
+                    
+                    // 클립보드에 복사
+                    navigator.clipboard.writeText(codeText).then(function() {
+                        // 복사 성공 피드백
+                        copyButton.classList.add('copied');
+                        copyButton.innerHTML = `
+                            <svg class="copy-icon" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                            </svg>
+                            <span class="copy-text">Copied!</span>
+                        `;
+                        
+                        // 2초 후 원래 상태로 복원
+                        setTimeout(function() {
+                            copyButton.classList.remove('copied');
+                            copyButton.innerHTML = `
+                                <svg class="copy-icon" viewBox="0 0 24 24">
+                                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                </svg>
+                                <span class="copy-text">Copy</span>
+                            `;
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('복사 실패:', err);
+                        // 복사 실패 피드백
+                        copyButton.innerHTML = `
+                            <svg class="copy-icon" viewBox="0 0 24 24">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+                            </svg>
+                            <span class="copy-text">Failed</span>
+                        `;
+                        
+                        setTimeout(function() {
+                            copyButton.innerHTML = `
+                                <svg class="copy-icon" viewBox="0 0 24 24">
+                                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                </svg>
+                                <span class="copy-text">Copy</span>
+                            `;
+                        }, 2000);
+                    });
+                });
+                
+                // 코드 블럭에 상대 위치 설정
+                if (getComputedStyle(codeBlock).position === 'static') {
+                    codeBlock.style.position = 'relative';
+                }
+                
+                // 복사 버튼을 코드 블럭에 추가
+                codeBlock.appendChild(copyButton);
+            });
+        });
     </script>
 </head>
 
@@ -491,7 +575,7 @@
     <main class="page-content" aria-label="Content" id="main-content">
         <div class="wrapper">
             <div class="content-wrapper">
-                <div class="main-content">
+                <div class="main-content{% if page.layout == 'post' %} post-page{% endif %}">
                     {{ content }}
                 </div>
             </div>

@@ -121,23 +121,22 @@ layout: default
     </main>
 </div>
 
-    <!-- 네비게이션 -->
-    <nav class="post-navigation" role="navigation">
-        {% if page.previous.url %}
-        <a class="prev-post" href="{{ page.previous.url }}" rel="prev">
-            <span class="nav-label">← 이전 글</span>
-            <span class="nav-title">{{ page.previous.title }}</span>
-        </a>
-        {% endif %}
-        
-        {% if page.next.url %}
-        <a class="next-post" href="{{ page.next.url }}" rel="next">
-            <span class="nav-label">다음 글 →</span>
-            <span class="nav-title">{{ page.next.title }}</span>
-        </a>
-        {% endif %}
-    </nav>
-</article>
+<!-- 네비게이션 -->
+<nav class="post-navigation" role="navigation">
+    {% if page.previous.url %}
+    <a class="prev-post" href="{{ page.previous.url }}" rel="prev">
+        <span class="nav-label">← 이전 글</span>
+        <span class="nav-title">{{ page.previous.title }}</span>
+    </a>
+    {% endif %}
+    
+    {% if page.next.url %}
+    <a class="next-post" href="{{ page.next.url }}" rel="next">
+        <span class="nav-label">다음 글 →</span>
+        <span class="nav-title">{{ page.next.title }}</span>
+    </a>
+    {% endif %}
+</nav>
 
 <!-- 브레드크럼 구조화된 데이터 -->
 <script type="application/ld+json">

@@ -727,6 +727,20 @@ body {
     background: var(--card-bg-dark);
 }
 
+/* 포스트 페이지 전용 메인 콘텐츠 스타일 */
+.main-content.post-page {
+    padding: 40px 30px;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .main-content.post-page {
+        padding: 20px 15px;
+    }
+}
+
 .category-list, .recent-posts {
     list-style: none;
     margin: 0;
@@ -1017,6 +1031,7 @@ input:focus, textarea:focus, select:focus {
 
 /* 코드 블럭과 문법 강조 */
 pre {
+  position: relative;
   background-color: #f8f9fa;
   color: #212529;
   padding: 1rem;
@@ -1032,6 +1047,70 @@ pre {
     background-color: #1e1e1e;
     color: #d4d4d4;
     border: 1px solid #333;
+  }
+  
+  // 일반 pre 태그에도 복사 버튼 스타일 적용
+  .copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #24292f;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 10;
+    
+    &:hover {
+      background: #f3f4f6;
+      border-color: #8b949e;
+    }
+    
+    &:active {
+      background: #e5e7ea;
+      transform: scale(0.98);
+    }
+    
+    [data-theme="dark"] & {
+      background: rgba(22, 27, 34, 0.9);
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      
+      &:hover {
+        background: #21262d;
+        border-color: #6e7681;
+      }
+      
+      &:active {
+        background: #30363d;
+      }
+    }
+    
+    // 복사 완료 상태
+    &.copied {
+      background: #28a745;
+      border-color: #28a745;
+      color: white;
+      
+      [data-theme="dark"] & {
+        background: #238636;
+        border-color: #238636;
+      }
+    }
+    
+    // 아이콘
+    .copy-icon {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
   }
 }
 
@@ -1060,6 +1139,7 @@ pre code {
 
 // Syntax highlighting classes
 .highlight {
+  position: relative;
   background-color: #f8f9fa;
   border-radius: 8px;
   padding: 1rem;
@@ -1070,6 +1150,70 @@ pre code {
   [data-theme="dark"] & {
     background-color: #1e1e1e;
     border: 1px solid #333;
+  }
+  
+  // 복사 버튼 스타일
+  .copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #24292f;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 10;
+    
+    &:hover {
+      background: #f3f4f6;
+      border-color: #8b949e;
+    }
+    
+    &:active {
+      background: #e5e7ea;
+      transform: scale(0.98);
+    }
+    
+    [data-theme="dark"] & {
+      background: rgba(22, 27, 34, 0.9);
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      
+      &:hover {
+        background: #21262d;
+        border-color: #6e7681;
+      }
+      
+      &:active {
+        background: #30363d;
+      }
+    }
+    
+    // 복사 완료 상태
+    &.copied {
+      background: #28a745;
+      border-color: #28a745;
+      color: white;
+      
+      [data-theme="dark"] & {
+        background: #238636;
+        border-color: #238636;
+      }
+    }
+    
+    // 아이콘
+    .copy-icon {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
   }
   
   // Light mode syntax colors
@@ -1116,33 +1260,20 @@ pre code {
   }
 }
 
-// Rouge syntax highlighter specific classes
+// Rouge syntax highlighter specific classes - simplified without line numbers
 .rouge-table {
   border: none;
   margin: 0;
+  width: 100%;
   
   td {
     border: none;
     padding: 0;
   }
   
-  .rouge-gutter {
-    background-color: #f6f8fa;
-    border-right: 1px solid #d0d7de;
-    color: #656d76;
-    padding: 0 0.5rem;
-    text-align: right;
-    user-select: none;
-    
-    [data-theme="dark"] & {
-      background-color: #161b22;
-      border-right: 1px solid #30363d;
-      color: #8b949e;
-    }
-  }
-  
   .rouge-code {
-    padding: 0 0.5rem;
+    padding: 0;
+    width: 100%;
   }
 }
 
@@ -1871,7 +2002,9 @@ blockquote {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    margin: 3rem 0;
+    margin: 2rem auto 3rem;
+    max-width: 1200px;
+    padding: 0 20px;
 }
 
 .prev-post, .next-post {
@@ -1917,24 +2050,26 @@ blockquote {
 /* 포스트 전용 레이아웃 */
 .post-layout {
     display: grid;
-    grid-template-columns: 250px 1fr;
+    grid-template-columns: 280px 1fr;
     gap: 30px;
     align-items: start;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
 }
 
 .post-sidebar {
     position: sticky;
-    top: 90px; /* 헤더 높이 고려 */
+    top: 110px; /* 헤더 높이 + 여백 고려 */
     background: var(--background-color);
     border-radius: 15px;
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
     height: fit-content;
-    max-height: calc(100vh - 120px);
+    max-height: calc(100vh - 140px);
     overflow-y: auto;
+    min-width: 280px;
     /* 커스텀 스크롤바 */
     scrollbar-width: thin;
     scrollbar-color: var(--primary-color) var(--accent-color);
@@ -1967,17 +2102,19 @@ blockquote {
 }
 
 .post-main {
-    background: var(--background-color);
-    border-radius: 15px;
-    box-shadow: var(--card-shadow);
-    border: 1px solid var(--border-color);
-    padding: 30px;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    padding: 0;
     min-height: 500px;
     transition: all 0.3s ease;
+    width: 100%;
+    max-width: 100%;
 }
 
 [data-theme="dark"] .post-main {
-    background: var(--card-bg-dark);
+    background: transparent;
 }
 
 /* 사이드바 목차 스타일 */
@@ -2037,12 +2174,8 @@ blockquote {
 
 .toc-sidebar .toc-list a.active {
     color: var(--primary-color);
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    border-left-color: var(--primary-color);
     background: var(--accent-color);
+    border-left-color: var(--primary-color);
     font-weight: 600;
     transform: translateX(8px);
 }
@@ -2075,22 +2208,36 @@ blockquote {
     line-height: 1.4;
 }
 
+/* 태블릿 반응형 */
+@media (max-width: 1024px) {
+    .post-layout {
+        grid-template-columns: 240px 1fr;
+        gap: 20px;
+    }
+    
+    .post-sidebar {
+        width: 240px;
+    }
+}
+
 /* 모바일 반응형 */
 @media (max-width: 768px) {
     .post-layout {
         grid-template-columns: 1fr;
         gap: 20px;
-        padding: 0 15px;
+        padding: 0;
     }
     
     .post-sidebar {
         position: static;
         order: 2;
         margin-top: 20px;
+        width: 100%;
     }
     
     .post-main {
-        padding: 20px;
+        padding: 0;
+        width: 100%;
     }
     
     .toc-sidebar .table-of-contents {
