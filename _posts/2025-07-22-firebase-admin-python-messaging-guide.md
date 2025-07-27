@@ -4,6 +4,7 @@ title: "Firebase Admin SDK Python으로 Cloud Messaging 구현하기"
 date: 2025-07-22
 categories: [Firebase, Python, Cloud Messaging]
 tags: [firebase, python, fcm, push notification, messaging]
+image: "/assets/img/posts/2025-07-22-firebase-admin-python-messaging-guide.webp"
 ---
 
 Firebase Cloud Messaging(FCM)은 무료로 메시지를 안정적으로 전송할 수 있는 크로스 플랫폼 메시징 솔루션입니다. 이 포스트에서는 Firebase Admin SDK를 사용하여 Python에서 FCM 메시지를 전송하는 방법을 알아보겠습니다.

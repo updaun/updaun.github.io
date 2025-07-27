@@ -4,6 +4,7 @@ title: "AWS SQS + Lambda에서 Step Functions + Lambda로 지연 푸시 메시�
 date: 2025-07-23
 categories: [AWS, Lambda, Step Functions, SQS, Push Notification]
 tags: [aws, lambda, stepfunctions, sqs, python, boto3, delayed-messaging, push-notification]
+image: "/assets/img/posts/2025-07-23-aws-sqs-to-stepfunctions-delayed-push-messaging.webp"
 ---
 
 ## 개요

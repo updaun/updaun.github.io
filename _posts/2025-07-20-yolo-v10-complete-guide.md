@@ -4,6 +4,7 @@ title: "YOLO v10 완벽 가이드: 차세대 실시간 객체 탐지 모델의 �
 date: 2025-07-20 10:00:00 +0900
 categories: [AI, Computer Vision, Object Detection]
 tags: [YOLO, YOLOv10, ObjectDetection, ComputerVision, AI, MachineLearning, RealTime, 객체탐지, 딥러닝, 컴퓨터비전]
+image: "/assets/img/posts/2025-07-20-yolo-v10-complete-guide.webp"
 ---
 
 컴퓨터 비전 분야에서 **YOLO(You Only Look Once)** 시리즈는 실시간 객체 탐지의 대명사로 자리잡았습니다. 2024년 발표된 **YOLO v10**은 기존 버전들의 한계를 뛰어넘어 **더 빠르고 정확한 성능**을 제공합니다. 이 글에서는 YOLO v10의 핵심 기술, 성능 개선사항, 그리고 실제 활용 방법까지 상세히 다뤄보겠습니다.
