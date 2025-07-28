@@ -68,3 +68,12 @@ build-iPhoneSimulator/
 # .rubocop-https?--*
 
 # End of https://www.toptal.com/developers/gitignore/api/ruby
+
+
+# Ignore Python virtual environments
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.py
