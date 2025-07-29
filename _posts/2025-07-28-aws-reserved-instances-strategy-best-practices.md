@@ -4,11 +4,12 @@ title: "AWS 예약 인스턴스 전략 및 모범 사례: 실무자를 위한 �
 date: 2025-07-28 10:00:00 +0900
 categories: [AWS, EC2, Cost Optimization]
 tags: [AWS, EC2, ReservedInstances, CostOptimization, FinOps, 예약인스턴스, 비용절감, 클라우드전략]
+image: "/assets/img/posts/2025-07-28-aws-reserved-instances-strategy-best-practices.png"
 ---
 
 AWS 환경에서 비용 최적화는 단순히 "큰 할인을 받는 것" 이상의 의미를 가집니다. 예약 인스턴스(Reserved Instances)는 올바른 전략으로 접근했을 때 단순한 비용 절감을 넘어 **예측 가능한 인프라 비용 관리**와 **장기적인 클라우드 전략 수립**의 핵심 도구가 됩니다.
 
-![AWS Reserved Instances Strategy](/assets/images/aws-ri/post-hero-web.png)
+![AWS Reserved Instances Strategy](/assets/img/posts/2025-07-28-aws-reserved-instances-strategy-best-practices.png)
 
 ## 🎯 예약 인스턴스 전략의 핵심 원칙
 
