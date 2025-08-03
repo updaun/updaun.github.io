@@ -981,7 +981,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 Django Ninja는 자동으로 API 문서를 생성합니다:
 
-```
+```bash
 http://localhost:8000/api/docs
 ```
 
@@ -989,21 +989,21 @@ http://localhost:8000/api/docs
 
 | 엔드포인트 | 메소드 | 설명 | 인증 필요 |
 |-----------|--------|------|----------|
-| `/api/auth/register` | POST | 회원가입 | ❌ |
-| `/api/auth/login` | POST | 로그인 | ❌ |
-| `/api/auth/logout` | POST | 로그아웃 | ✅ |
-| `/api/auth/me` | GET | 현재 사용자 정보 | ✅ |
-| `/api/auth/verify-email` | GET | 이메일 인증 | ❌ |
-| `/api/auth/resend-verification` | POST | 인증 이메일 재발송 | ❌ |
-| `/api/admin/users` | GET | 사용자 목록 | 🔒 관리자 |
-| `/api/admin/users/statistics` | GET | 사용자 통계 | 🔒 관리자 |
-| `/api/admin/users/pending-approval` | GET | 승인 대기 목록 | 🔒 관리자 |
-| `/api/admin/users/approve` | POST | 사용자 승인 | 🔒 관리자 |
-| `/api/admin/users/approve-bulk` | POST | 일괄 승인 | 🔒 관리자 |
-| `/api/admin/users/suspend` | POST | 사용자 정지 | 🔒 관리자 |
-| `/api/admin/users/suspend-bulk` | POST | 일괄 정지 | 🔒 관리자 |
-| `/api/admin/users/reactivate` | POST | 사용자 재활성화 | 🔒 관리자 |
-| `/api/admin/users/{id}/reactivation-info` | GET | 재활성화 정보 | 🔒 관리자 |
+| `/api/auth/register` | POST | 회원가입 | No |
+| `/api/auth/login` | POST | 로그인 | No |
+| `/api/auth/logout` | POST | 로그아웃 | Yes |
+| `/api/auth/me` | GET | 현재 사용자 정보 | Yes |
+| `/api/auth/verify-email` | GET | 이메일 인증 | No |
+| `/api/auth/resend-verification` | POST | 인증 이메일 재발송 | No |
+| `/api/admin/users` | GET | 사용자 목록 | Admin |
+| `/api/admin/users/statistics` | GET | 사용자 통계 | Admin |
+| `/api/admin/users/pending-approval` | GET | 승인 대기 목록 | Admin |
+| `/api/admin/users/approve` | POST | 사용자 승인 | Admin |
+| `/api/admin/users/approve-bulk` | POST | 일괄 승인 | Admin |
+| `/api/admin/users/suspend` | POST | 사용자 정지 | Admin |
+| `/api/admin/users/suspend-bulk` | POST | 일괄 정지 | Admin |
+| `/api/admin/users/reactivate` | POST | 사용자 재활성화 | Admin |
+| `/api/admin/users/{id}/reactivation-info` | GET | 재활성화 정보 | Admin |
 
 ### 프론트엔드 연동 예시
 
