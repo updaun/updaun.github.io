@@ -958,6 +958,7 @@ def cleanup_old_detections():
 ### 1. 기본 템플릿
 
 ```html
+{% raw %}
 <!-- templates/base.html -->
 <!DOCTYPE html>
 <html lang="ko">
@@ -1134,11 +1135,13 @@ def cleanup_old_detections():
     {% endblock %}
 </body>
 </html>
+{% endraw %}
 ```
 
 ### 2. 메인 페이지 템플릿
 
 ```html
+{% raw %}
 <!-- templates/object_detection/index.html -->
 {% extends 'base.html' %}
 
@@ -1385,11 +1388,13 @@ document.getElementById('webcamModal').addEventListener('hidden.bs.modal', funct
 });
 </script>
 {% endblock %}
+{% endraw %}
 ```
 
 ### 3. 이미지 업로드 템플릿
 
 ```html
+{% raw %}
 <!-- templates/object_detection/upload.html -->
 {% extends 'base.html' %}
 
@@ -1501,11 +1506,13 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
 });
 </script>
 {% endblock %}
+{% endraw %}
 ```
 
 ### 4. 탐지 결과 템플릿
 
 ```html
+{% raw %}
 <!-- templates/object_detection/result.html -->
 {% extends 'base.html' %}
 
@@ -1774,6 +1781,7 @@ new Chart(confCtx, {
 </script>
 {% endif %}
 {% endblock %}
+{% endraw %}
 ```
 
 ## 🔧 Django 관리자 설정

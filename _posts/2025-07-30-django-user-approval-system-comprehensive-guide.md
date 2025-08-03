@@ -714,6 +714,7 @@ class YourAppConfig(AppConfig):
 
 ```html
 <!-- templates/registration/register.html -->
+{% raw %}
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
@@ -817,12 +818,14 @@ class YourAppConfig(AppConfig):
     </div>
 </div>
 {% endblock %}
+{% endraw %}
 ```
 
 ### 로그인 템플릿
 
 ```html
 <!-- templates/registration/login.html -->
+{% raw %}
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
@@ -885,6 +888,7 @@ class YourAppConfig(AppConfig):
     </div>
 </div>
 {% endblock %}
+{% endraw %}
 ```
 
 ## 📊 관리 대시보드 구현
@@ -950,6 +954,7 @@ def approval_dashboard(request):
 
 ```html
 <!-- templates/admin/approval_dashboard.html -->
+{% raw %}
 {% extends 'admin/base_site.html' %}
 {% load humanize %}
 
@@ -1070,6 +1075,7 @@ def approval_dashboard(request):
     </div>
 </div>
 {% endblock %}
+{% endraw %}
 ```
 
 ## 🧪 테스트 코드 작성
