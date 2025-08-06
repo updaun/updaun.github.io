@@ -477,7 +477,7 @@ def room(request, room_name):
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>{% block title %}Django Channels Chat{% endblock %}</title>
+    <title>{% raw %}{% block title %}Django Channels Chat{% endblock %}{% endraw %}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -507,11 +507,11 @@ def room(request, room_name):
 <body>
     <div class="container">
         <div class="header">
-            <h1>{% block header %}Django Channels Chat{% endblock %}</h1>
+            <h1>{% raw %}{% block header %}Django Channels Chat{% endblock %}{% endraw %}</h1>
         </div>
         <div class="content">
-            {% block content %}
-            {% endblock %}
+            {% raw %}{% block content %}
+            {% endblock %}{% endraw %}
         </div>
     </div>
 </body>
@@ -520,7 +520,7 @@ def room(request, room_name):
 
 ```html
 <!-- chat/templates/chat/room.html -->
-{% extends 'chat/base.html' %}
+{% raw %}{% extends 'chat/base.html' %}
 
 {% block title %}Room: {{ room_name }}{% endblock %}
 
@@ -531,16 +531,16 @@ def room(request, room_name):
     </small>
 {% endblock %}
 
-{% block content %}
+{% block content %}{% endraw %}
 <div id="chat-container">
     <div id="chat-log" style="height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9;">
-        {% for message in messages %}
+        {% raw %}{% for message in messages %}
             <div class="message" style="margin-bottom: 10px;">
                 <strong>{{ message.user.username }}</strong>
                 <span style="color: #666; font-size: 0.8em;">{{ message.created_at|date:"H:i:s" }}</span><br>
                 {{ message.content }}
             </div>
-        {% endfor %}
+        {% endfor %}{% endraw %}
     </div>
     
     <div id="typing-indicator" style="color: #666; font-style: italic; height: 20px; margin-bottom: 10px;"></div>
@@ -695,9 +695,9 @@ def room(request, room_name):
     messageInputDom.focus();
 </script>
 
-{{ room_name|json_script:"room-name" }}
+{% raw %}{{ room_name|json_script:"room-name" }}
 {{ user.username|json_script:"user-name" }}
-{% endblock %}
+{% endblock %}{% endraw %}
 ```
 
 ## 🔄 Redis를 이용한 프로덕션 설정
