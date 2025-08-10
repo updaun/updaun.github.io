@@ -235,8 +235,8 @@ class TossPaymentsService:
     </div>
 
     <script>
-        const clientKey = '{{ toss_client_key }}';
-        const customerKey = '{{ customer_key }}';
+        const clientKey = '{% raw %}{{ toss_client_key }}{% endraw %}';
+        const customerKey = '{% raw %}{{ customer_key }}{% endraw %}';
         const tossPayments = TossPayments(clientKey);
         
         // 결제창 위젯 렌더링
@@ -756,39 +756,40 @@ def calculate_next_billing_date(plan):
 <div class="subscription-plans">
     <h2>구독 플랜 선택</h2>
     
-    {% if current_subscription %}
+    {% raw %}{% if current_subscription %}{% endraw %}
         <div class="current-subscription">
-            <h3>현재 구독: {{ current_subscription.plan.name }}</h3>
-            <p>다음 결제일: {{ current_subscription.next_billing_date|date:"Y-m-d" }}</p>
-            <a href="{% url 'subscription_detail' %}" class="btn btn-primary">구독 관리</a>
+            <h3>현재 구독: {% raw %}{{ current_subscription.plan.name }}{% endraw %}</h3>
+            <p>다음 결제일: {% raw %}{{ current_subscription.next_billing_date|date:"Y-m-d" }}{% endraw %}</p>
+            <a href="{% raw %}{% url 'subscription_detail' %}{% endraw %}" class="btn btn-primary">구독 관리</a>
         </div>
-    {% else %}
+    {% raw %}{% else %}{% endraw %}
         <div class="plans-grid">
-            {% for plan in plans %}
+            {% raw %}{% for plan in plans %}{% endraw %}
                 <div class="plan-card">
-                    <h3>{{ plan.name }}</h3>
+                    <h3>{% raw %}{{ plan.name }}{% endraw %}</h3>
                     <div class="price">
-                        {{ plan.price|floatformat:0 }}원
-                        <span class="cycle">/ {{ plan.get_billing_cycle_display }}</span>
+                        {% raw %}{{ plan.price|floatformat:0 }}{% endraw %}원
+                        <span class="cycle">/ {% raw %}{{ plan.get_billing_cycle_display }}{% endraw %}</span>
                     </div>
                     
                     <ul class="features">
-                        {% for feature, value in plan.features.items %}
-                            <li>{{ feature }}: {{ value }}</li>
-                        {% endfor %}
+                        {% raw %}{% for feature, value in plan.features.items %}{% endraw %}
+                            <li>{% raw %}{{ feature }}{% endraw %}: {% raw %}{{ value }}{% endraw %}</li>
+                        {% raw %}{% endfor %}{% endraw %}
                     </ul>
                     
-                    <a href="{% url 'subscribe_to_plan' plan.id %}" class="btn btn-success">
+                    <a href="{% raw %}{% url 'subscribe_to_plan' plan.id %}{% endraw %}" class="btn btn-success">
                         구독하기
                     </a>
                 </div>
-            {% endfor %}
+            {% raw %}{% endfor %}{% endraw %}
         </div>
-    {% endif %}
+    {% raw %}{% endif %}{% endraw %}
 </div>
 ```
 
 ```html
+{% raw %}
 <!-- subscriptions/detail.html -->
 <div class="subscription-detail">
     <h2>구독 관리</h2>
@@ -837,6 +838,7 @@ def calculate_next_billing_date(plan):
         </table>
     </div>
 </div>
+{% endraw %}
 ```
 
 ## 🛡️ 보안 및 에러 처리
