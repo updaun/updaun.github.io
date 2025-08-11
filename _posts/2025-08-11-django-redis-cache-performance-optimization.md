@@ -194,36 +194,38 @@ def localized_view(request):
 
 ```html
 <!-- products/list.html -->
-{% load cache %}
+```html
+<!-- products/list.html -->
+{%raw%}{% load cache %}{%endraw%}
 
 <!-- 비싼 계산 결과 캐시 -->
-{% cache 300 expensive_calculation request.user.id %}
+{%raw%}{% cache 300 expensive_calculation request.user.id %}{%endraw%}
     <div class="statistics">
-        {% for stat in expensive_stats %}
-            <div class="stat-item">{{ stat.name }}: {{ stat.value }}</div>
-        {% endfor %}
+        {%raw%}{% for stat in expensive_stats %}{%endraw%}
+            <div class="stat-item">{%raw%}{{ stat.name }}: {{ stat.value }}{%endraw%}</div>
+        {%raw%}{% endfor %}{%endraw%}
     </div>
-{% endcache %}
+{%raw%}{% endcache %}{%endraw%}
 
 <!-- 카테고리별 캐시 -->
-{% for category in categories %}
-    {% cache 600 category_products category.id %}
+{%raw%}{% for category in categories %}{%endraw%}
+    {%raw%}{% cache 600 category_products category.id %}{%endraw%}
         <div class="category-section">
-            <h3>{{ category.name }}</h3>
-            {% for product in category.products.all %}
-                <div class="product-item">{{ product.name }}</div>
-            {% endfor %}
+            <h3>{%raw%}{{ category.name }}{%endraw%}</h3>
+            {%raw%}{% for product in category.products.all %}{%endraw%}
+                <div class="product-item">{%raw%}{{ product.name }}{%endraw%}</div>
+            {%raw%}{% endfor %}{%endraw%}
         </div>
-    {% endcache %}
-{% endfor %}
+    {%raw%}{% endcache %}{%endraw%}
+{%raw%}{% endfor %}{%endraw%}
 
 <!-- 조건부 템플릿 캐시 -->
-{% cache 300 user_specific_content request.user.id only if not user.is_staff %}
+{%raw%}{% cache 300 user_specific_content request.user.id only if not user.is_staff %}{%endraw%}
     <!-- 일반 사용자에게만 캐시 적용 -->
     <div class="user-dashboard">
         <!-- 복잡한 사용자 대시보드 -->
     </div>
-{% endcache %}
+{%raw%}{% endcache %}{%endraw%}
 ```
 
 ### 4. 저수준 캐시 API
