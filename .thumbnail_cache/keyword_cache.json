@@ -1,0 +1,230 @@
+{
+  "aws": [
+    "cloud computing",
+    "amazon web services",
+    "server infrastructure",
+    "cloud architecture"
+  ],
+  "ec2": [
+    "virtual machines",
+    "cloud servers",
+    "compute instances",
+    "server hosting"
+  ],
+  "s3": [
+    "cloud storage",
+    "data backup",
+    "file storage",
+    "digital archives"
+  ],
+  "lambda": [
+    "serverless",
+    "cloud functions",
+    "microservices",
+    "automation"
+  ],
+  "rds": [
+    "database",
+    "cloud database",
+    "data management",
+    "sql servers"
+  ],
+  "vpc": [
+    "network security",
+    "cloud networking",
+    "private cloud",
+    "network infrastructure"
+  ],
+  "python": [
+    "programming",
+    "coding",
+    "software development",
+    "computer programming"
+  ],
+  "django": [
+    "web development",
+    "backend programming",
+    "web framework",
+    "server development"
+  ],
+  "flask": [
+    "web development",
+    "microframework",
+    "api development",
+    "python web"
+  ],
+  "fastapi": [
+    "api development",
+    "modern web",
+    "async programming",
+    "high performance"
+  ],
+  "ninja": [
+    "api framework",
+    "fast development",
+    "modern programming",
+    "web api"
+  ],
+  "ai": [
+    "artificial intelligence",
+    "machine learning",
+    "neural networks",
+    "deep learning"
+  ],
+  "yolo": [
+    "computer vision",
+    "object detection",
+    "image recognition",
+    "ai vision"
+  ],
+  "opencv": [
+    "computer vision",
+    "image processing",
+    "video analysis",
+    "visual computing"
+  ],
+  "tensorflow": [
+    "machine learning",
+    "deep learning",
+    "neural networks",
+    "ai development"
+  ],
+  "pytorch": [
+    "deep learning",
+    "machine learning",
+    "neural networks",
+    "ai research"
+  ],
+  "javascript": [
+    "web development",
+    "frontend programming",
+    "interactive web",
+    "coding"
+  ],
+  "react": [
+    "frontend development",
+    "user interface",
+    "web components",
+    "modern web"
+  ],
+  "vue": [
+    "frontend framework",
+    "user interface",
+    "web development",
+    "javascript"
+  ],
+  "nextjs": [
+    "full stack",
+    "react framework",
+    "modern web",
+    "web development"
+  ],
+  "mongodb": [
+    "database",
+    "nosql",
+    "document database",
+    "data storage"
+  ],
+  "postgresql": [
+    "database",
+    "sql",
+    "relational database",
+    "data management"
+  ],
+  "mysql": [
+    "database",
+    "sql server",
+    "data management",
+    "web database"
+  ],
+  "redis": [
+    "caching",
+    "in-memory database",
+    "performance",
+    "data structure"
+  ],
+  "docker": [
+    "containerization",
+    "devops",
+    "deployment",
+    "software containers"
+  ],
+  "kubernetes": [
+    "container orchestration",
+    "devops",
+    "cloud native",
+    "microservices"
+  ],
+  "git": [
+    "version control",
+    "collaboration",
+    "code management",
+    "development tools"
+  ],
+  "cicd": [
+    "automation",
+    "devops",
+    "continuous integration",
+    "deployment pipeline"
+  ],
+  "api": [
+    "software integration",
+    "web services",
+    "data exchange",
+    "programming interfaces"
+  ],
+  "testing": [
+    "software testing",
+    "quality assurance",
+    "code validation",
+    "debugging"
+  ],
+  "performance": [
+    "optimization",
+    "speed improvement",
+    "efficiency",
+    "system performance"
+  ],
+  "security": [
+    "cybersecurity",
+    "data protection",
+    "secure coding",
+    "system security"
+  ],
+  "async": [
+    "concurrent programming",
+    "parallel processing",
+    "performance optimization",
+    "modern programming"
+  ],
+  "tdd": [
+    "test driven development",
+    "software testing",
+    "code quality",
+    "agile development"
+  ],
+  "architecture": [
+    "software architecture",
+    "system design",
+    "technical blueprint",
+    "engineering"
+  ],
+  "optimization": [
+    "performance tuning",
+    "efficiency improvement",
+    "speed optimization",
+    "resource management"
+  ],
+  "guide": [
+    "tutorial",
+    "learning",
+    "education",
+    "instruction manual"
+  ],
+  "analysis": [
+    "data analysis",
+    "research",
+    "investigation",
+    "examination"
+  ]
+}
