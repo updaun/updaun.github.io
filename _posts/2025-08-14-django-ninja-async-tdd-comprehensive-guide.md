@@ -4,6 +4,7 @@ title: "Django Ninja TestClient로 TDD 완전 가이드: 체계적인 API 테스
 date: 2025-08-14 10:00:00 +0900
 categories: [Django, Testing, Async, API]
 tags: [Django-Ninja, TDD, TestClient, AsyncTestClient, Testing, Python, API, Unit Test, Integration Test, Django, Performance, Async]
+image: "/assets/img/posts/2025-08-14-django-ninja-async-tdd-comprehensive-guide.webp"
 ---
 
 Django Ninja로 비동기 API를 개발하면서 테스트 작성에 어려움을 겪고 계신가요? 이 글에서는 Django Ninja의 TestClient와 AsyncTestClient를 활용한 TDD(Test-Driven Development) 방법론을 단계별로 알아보겠습니다. 동기/비동기 테스트의 장단점부터 세분화된 테스트 전략까지 실무에서 바로 적용할 수 있는 방법들을 다루겠습니다.

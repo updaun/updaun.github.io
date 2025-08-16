@@ -8,7 +8,7 @@ categories: [Python, OpenCV, Computer Vision]
 tags: [python, opencv, document-scanner, image-processing, computer-vision, tutorial, programming, ai, ml]
 excerpt: "Python과 OpenCV를 사용해서 CamScanner와 유사한 문서 스캐너를 직접 구현해보는 완벽 가이드. 문서 영역 검출, 원근 변환, 이미지 향상 기법을 단계별로 학습합니다."
 description: "Python OpenCV로 CamScanner 구현 튜토리얼 - 문서 스캐너 개발 가이드"
-image: "/assets/img/posts/camscanner-python-guide.jpg"
+image: "/assets/img/posts/2025-07-21-camscanner-python-implementation-guide.jpg"
 image_alt: "Python OpenCV CamScanner 구현 예시"
 sitemap: true
 search: true

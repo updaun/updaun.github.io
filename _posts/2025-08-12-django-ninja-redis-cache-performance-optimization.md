@@ -4,6 +4,7 @@ title: "Django Ninja + Redis Cache로 API 성능 10배 향상시키기: 실전 �
 date: 2025-08-12 10:00:00 +0900
 categories: [Django, Performance, Cache, API]
 tags: [Django, Django-Ninja, Redis, Cache, Performance, API, Optimization, Python, Backend]
+image: "/assets/img/posts/2025-08-12-django-ninja-redis-cache-performance-optimization.webp"
 ---
 
 API 성능은 사용자 경험을 좌우하는 핵심 요소입니다. Django Ninja와 Redis Cache를 활용하면 기존 Django REST API 대비 월등한 성능 향상을 달성할 수 있습니다. 이 글에서는 실제 프로젝트에서 API 응답 시간을 90% 단축시킨 경험을 바탕으로 최적화 전략을 상세히 설명하겠습니다.

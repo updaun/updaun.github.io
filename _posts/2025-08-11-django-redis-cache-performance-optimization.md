@@ -4,6 +4,7 @@ title: "Django Redis 캐시 완전 가이드: 성능 최적화의 핵심"
 date: 2025-08-11 10:00:00 +0900
 categories: [Django, Redis, Cache, Performance]
 tags: [Django, Redis, Cache, Performance, Optimization, Session, Cache Framework, Caching Strategy, Django-Redis, Memory]
+image: "/assets/img/posts/2025-08-11-django-redis-cache-performance-optimization.webp"
 ---
 
 Django 애플리케이션의 성능 병목을 해결하고 싶으신가요? Redis를 활용한 캐시 시스템은 Django 성능 최적화의 핵심 요소입니다. 이 가이드에서는 Django에서 Redis 캐시를 구현하는 방법부터 고급 최적화 기법까지 실전 경험을 바탕으로 상세히 알아보겠습니다.

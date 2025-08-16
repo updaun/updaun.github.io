@@ -4,6 +4,7 @@ title: "AWS Elastic Beanstalk 완전 가이드: 언제 사용하고 언제 피�
 date: 2025-08-13 10:00:00 +0900
 categories: [AWS, DevOps, Cloud, Deployment]
 tags: [AWS, Elastic-Beanstalk, DevOps, Cloud, Deployment, PaaS, Docker, Auto-Scaling, Cost-Optimization]
+image: "/assets/img/posts/2025-08-13-aws-elastic-beanstalk-complete-guide.webp"
 ---
 
 AWS Elastic Beanstalk는 개발자가 인프라 관리에 신경 쓰지 않고 애플리케이션 개발에 집중할 수 있게 해주는 PaaS(Platform as a Service) 서비스입니다. 하지만 모든 상황에 적합한 것은 아닙니다. 이 글에서는 실제 프로젝트 경험을 바탕으로 Elastic Beanstalk의 장단점과 최적의 사용 시나리오를 분석해보겠습니다.

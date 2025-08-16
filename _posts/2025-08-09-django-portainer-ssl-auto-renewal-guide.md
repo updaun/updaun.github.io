@@ -4,6 +4,7 @@ title: "Django + Nginx + Certbot SSL 자동 갱신 - Portainer 배포 완벽 가
 date: 2025-08-09 14:00:00 +0900
 categories: [Django, DevOps, Docker]
 tags: [Django, Nginx, Certbot, SSL, Portainer, Docker, HTTPS, Let's Encrypt, 자동화, 배포]
+image: "/assets/img/posts/2025-08-09-django-portainer-ssl-auto-renewal-guide.webp"
 ---
 
 Django 백엔드 서비스를 Portainer로 배포할 때 SSL 인증서 자동 갱신은 필수적인 운영 요소입니다. 이 글에서는 Django + Nginx + Certbot 조합으로 HTTPS를 설정하고 Let's Encrypt SSL 인증서를 자동으로 갱신하는 완전한 배포 프로세스를 다룹니다.

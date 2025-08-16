@@ -4,6 +4,7 @@ title: "Django + FastAPI YOLO 추론 성능 최적화: 10초 응답시간 개선
 date: 2025-08-10
 categories: [Backend, Performance, AI]
 tags: [Django, FastAPI, YOLO, MSA, Performance, Optimization, AI, Deep Learning]
+image: "/assets/img/posts/2025-08-10-django-fastapi-yolo-inference-optimization.webp"
 ---
 
 ## 문제 상황 분석
