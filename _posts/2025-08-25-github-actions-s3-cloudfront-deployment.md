@@ -188,7 +188,7 @@ jobs:
             --content-type "text/html; charset=utf-8"
             
       - name: 🗑️ Invalidate CloudFront cache
-        if: ${{ github.event.inputs.invalidate_cache != 'false' }}
+        if: {% raw %}${{ github.event.inputs.invalidate_cache != 'false' }}{% endraw %}
         run: |
           echo "🗑️ Creating CloudFront invalidation..."
           INVALIDATION_ID=$(aws cloudfront create-invalidation \
@@ -730,7 +730,7 @@ jobs:
   auto-recovery:
     runs-on: ubuntu-latest
     name: 🛠️ Auto Recovery
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    if: {% raw %}${{ github.event.workflow_run.conclusion == 'failure' }}{% endraw %}
     
     steps:
       - name: 📂 Checkout code
