@@ -758,6 +758,7 @@ class CachedAPIView(APIView):
 
 ### 4. 템플릿 프래그먼트 캐싱
 
+{% raw %}
 ```html
 <!-- templates/products/detail.html -->
 {% load cache %}
@@ -806,6 +807,7 @@ class CachedAPIView(APIView):
     {% endcache %}
 </div>
 ```
+{% endraw %}
 
 ### 5. 캐시 무효화 전략
 
