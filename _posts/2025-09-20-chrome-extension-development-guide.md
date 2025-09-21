@@ -9,8 +9,6 @@ author: "updaun"
 image: "/assets/img/posts/2025-09-20-chrome-extension-development-guide.webp"
 ---
 
-## 개요
-
 Chrome Extension은 브라우저 기능을 확장하여 사용자에게 추가적인 편의성을 제공하는 강력한 도구입니다. 이 포스트에서는 Chrome Extension 개발의 전체 과정을 실무 중심으로 설명하겠습니다.
 
 ## 1. Chrome Extension 기본 개념
