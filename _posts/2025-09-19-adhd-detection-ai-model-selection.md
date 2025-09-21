@@ -4,6 +4,7 @@ title: "초등학생 그림 기반 ADHD 진단 AI: 모델 선정부터 최적화
 date: 2025-09-19 10:00:00 +0900
 categories: [AI, Machine Learning, Computer Vision, Healthcare]
 tags: [ADHD, CNN, Vision Transformer, Image Classification, Deep Learning, Medical AI, PyTorch, TensorFlow]
+image: "/assets/img/posts/2025-09-19-adhd-detection-ai-model-selection.webp"
 ---
 
 초등학생의 그림을 통해 ADHD(주의력결핍 과다행동장애)를 조기 진단하는 AI 시스템을 개발하는 것은 매우 흥미로우면서도 도전적인 프로젝트입니다. 이 글에서는 실제 프로젝트를 진행하면서 고려해야 할 모델 선정 과정과 최적화 전략을 상세히 다루어보겠습니다.
