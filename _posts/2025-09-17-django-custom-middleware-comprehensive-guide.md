@@ -4,6 +4,7 @@ title: "Django 커스텀 미들웨어 완전 가이드: 실전 구현 사례와 
 date: 2025-09-17 14:00:00 +0900
 categories: [Django, Middleware, Performance, Security]
 tags: [Django, Middleware, Custom Middleware, Performance, Security, Authentication, Logging, Rate Limiting]
+image: "/assets/img/posts/2025-09-17-django-custom-middleware-comprehensive-guide.webp"
 ---
 
 Django 미들웨어는 요청과 응답 처리 과정에서 **횡단 관심사(Cross-cutting Concerns)**를 처리하는 강력한 도구입니다. 인증, 로깅, 성능 모니터링, 보안 검사 등 애플리케이션 전반에 걸쳐 적용되어야 하는 기능들을 중앙화하여 관리할 수 있습니다. 이 글에서는 Django 커스텀 미들웨어의 **실전 구현 사례**와 **고려사항**을 상세히 다루겠습니다.

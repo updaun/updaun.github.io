@@ -4,6 +4,7 @@ title: "Django QuerySet 최적화: values(), values_list(), only(), defer() 완�
 date: 2025-09-18 10:00:00 +0900
 categories: [Django, Python, Database, Performance]
 tags: [Django, QuerySet, ORM, Database, Performance, Optimization, Python, SQL]
+image: "/assets/img/posts/2025-09-18-django-queryset-optimization-methods.webp"
 ---
 
 Django ORM을 사용하다 보면 데이터베이스 성능 최적화가 중요한 이슈가 됩니다. 특히 대용량 데이터를 다룰 때는 필요한 필드만 선택적으로 가져오는 것이 성능에 큰 영향을 미칩니다. 이 글에서는 Django에서 제공하는 4가지 주요 QuerySet 최적화 메서드인 `values()`, `values_list()`, `only()`, `defer()`의 차이점과 성능 영향을 상세히 알아보겠습니다.
