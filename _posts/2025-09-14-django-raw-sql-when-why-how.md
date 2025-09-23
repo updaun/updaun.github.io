@@ -4,6 +4,7 @@ title: "Django ORM vs Raw SQL: 언제, 왜, 어떻게 Raw SQL을 사용해야 �
 date: 2025-09-14 14:00:00 +0900
 categories: [Django, ORM, Database, SQL]
 tags: [Django, ORM, Raw SQL, Database Optimization, Performance, Complex Queries, SQL Injection, Database Management]
+image: "/assets/img/posts/2025-09-14-django-raw-sql-when-why-how.webp"
 ---
 
 Django ORM은 강력하고 편리한 도구이지만, 모든 상황에서 최적의 해답을 제공하지는 않습니다. 때로는 **Raw SQL**을 직접 사용해야 하는 상황이 발생합니다. 이 글에서는 언제 Raw SQL이 필요한지, 안전하게 사용하는 방법, 그리고 ORM과 Raw SQL을 효과적으로 조합하는 전략을 상세히 알아보겠습니다.

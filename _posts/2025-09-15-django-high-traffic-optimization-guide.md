@@ -4,6 +4,7 @@ title: "Django 대용량 트래픽 처리 완전 가이드: 초당 10만 요청�
 date: 2025-09-15 14:00:00 +0900
 categories: [Django, Performance, Scalability, Architecture]
 tags: [Django, High Traffic, Performance Optimization, Scalability, Load Balancing, Caching, Database Optimization, ASGI, Microservices]
+image: "/assets/img/posts/2025-09-15-django-high-traffic-optimization-guide.webp"
 ---
 
 Django로 구축한 서비스가 성장하면서 **대용량 트래픽**을 처리해야 하는 상황에 직면하게 됩니다. 초당 수천, 수만 건의 요청을 안정적으로 처리하면서도 빠른 응답 시간을 유지하는 것은 쉽지 않은 도전입니다. 이 글에서는 Django 애플리케이션을 **대용량 트래픽에 최적화**하는 종합적인 전략을 실전 중심으로 다루겠습니다.
