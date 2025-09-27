@@ -1030,6 +1030,7 @@ def generate_image_metadata(image_id: str):
 
 ### 1. JavaScript 클라이언트
 
+{% raw %}
 ```javascript
 // static/js/image-upload.js
 class ImageUploader {
@@ -1251,9 +1252,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 ```
+{% endraw %}
 
 ### 2. React 컴포넌트 예시
 
+{% raw %}
 ```jsx
 // components/ImageUploader.jsx
 import React, { useState, useCallback } from 'react';
@@ -1311,7 +1314,7 @@ const ImageUploader = ({ categoryId, onUploadComplete }) => {
                         <div className="progress-bar">
                             <div 
                                 className="progress-fill" 
-                                style={{ width: `${progress}%` }}
+                                style={{ width: progress + '%' }}
                             ></div>
                         </div>
                         <p>Uploading... {Math.round(progress)}%</p>
@@ -1338,6 +1341,7 @@ const ImageUploader = ({ categoryId, onUploadComplete }) => {
 
 export default ImageUploader;
 ```
+{% endraw %}
 
 ## 보안 고려사항
 
