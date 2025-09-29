@@ -1198,3 +1198,1640 @@ class PaginatedResponse(Schema):
     has_next: bool
     has_previous: bool
 ```
+
+## API 엔드포인트 구현
+
+### 1. 메인 API 라우터
+
+```python
+# verification/api.py
+from ninja import Router, File, UploadedFile
+from ninja.pagination import paginate, PageNumberPagination
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.core.cache import cache
+from django.db import transaction
+from django.utils import timezone
+from typing import List
+import uuid
+import os
+import time
+
+from .models import (
+    VerificationSession, PhoneVerification, EmailVerification,
+    IDCardVerification, FaceVerification, VerificationLog
+)
+from .services.sms_service import SMSService
+from .services.email_service import EmailService
+from .services.ocr_service import OCRService
+from .services.face_service import FaceRecognitionService
+from .schemas import *
+from .tasks import process_id_card_verification, process_face_verification
+
+router = Router()
+
+# 서비스 인스턴스
+sms_service = SMSService()
+email_service = EmailService()
+ocr_service = OCRService()
+face_service = FaceRecognitionService()
+
+@router.post("/session/create", response=BaseResponse)
+def create_verification_session(request, payload: CreateVerificationSessionSchema):
+    """인증 세션 생성"""
+    
+    try:
+        # 세션 키 생성
+        session_key = str(uuid.uuid4())
+        
+        # 인증 세션 생성
+        session = VerificationSession.objects.create(
+            session_key=session_key,
+            phone_number=payload.phone_number or '',
+            email=payload.email or '',
+            max_step=4 if payload.full_verification else 2,
+            current_step=1
+        )
+        
+        # 로그 기록
+        VerificationLog.objects.create(
+            session=session,
+            event_type=VerificationLog.EventType.SESSION_CREATED,
+            description="새로운 인증 세션이 생성되었습니다",
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            metadata={
+                'has_phone': bool(payload.phone_number),
+                'has_email': bool(payload.email),
+                'full_verification': payload.full_verification
+            }
+        )
+        
+        return BaseResponse(
+            success=True,
+            message="Verification session created successfully",
+            data={
+                'session_id': str(session.id),
+                'session_key': session.session_key,
+                'status': session.status,
+                'current_step': session.current_step,
+                'max_step': session.max_step,
+                'expires_at': session.expires_at.isoformat()
+            }
+        )
+        
+    except Exception as e:
+        return BaseResponse(
+            success=False,
+            message="Failed to create verification session",
+            errors=[str(e)]
+        )
+
+@router.get("/session/{session_key}/status", response=VerificationProgressResponse)
+def get_verification_status(request, session_key: str):
+    """인증 진행 상황 조회"""
+    
+    session = get_object_or_404(VerificationSession, session_key=session_key)
+    
+    # 완료된 단계 확인
+    completed_steps = []
+    phone_verified = session.phone_verifications.filter(is_verified=True).exists()
+    email_verified = session.email_verifications.filter(is_verified=True).exists()
+    id_card_verified = session.id_card_verifications.filter(status='success').exists()
+    face_verified = session.face_verifications.filter(status='success').exists()
+    
+    if phone_verified:
+        completed_steps.append('phone')
+    if email_verified:
+        completed_steps.append('email')
+    if id_card_verified:
+        completed_steps.append('id_card')
+    if face_verified:
+        completed_steps.append('face')
+    
+    return VerificationProgressResponse(
+        session_id=str(session.id),
+        status=session.status,
+        current_step=session.current_step,
+        max_step=session.max_step,
+        completed_steps=completed_steps,
+        verification_score=session.verification_score,
+        phone_verified=phone_verified,
+        email_verified=email_verified,
+        id_card_verified=id_card_verified,
+        face_verified=face_verified,
+        expires_at=session.expires_at,
+        is_expired=session.is_expired()
+    )
+
+# 휴대폰 인증 엔드포인트
+@router.post("/phone/send", response=BaseResponse)
+def send_phone_verification(request, payload: SendSMSRequest):
+    """휴대폰 인증번호 발송"""
+    
+    session = get_object_or_404(VerificationSession, session_key=payload.session_key)
+    
+    if session.is_expired():
+        return BaseResponse(
+            success=False,
+            message="Verification session expired",
+            errors=["SESSION_EXPIRED"]
+        )
+    
+    # 전화번호 정규화
+    normalized_phone = sms_service.normalize_phone_number(payload.phone_number)
+    
+    # 전화번호 유효성 검사
+    if not sms_service.validate_phone_number(normalized_phone):
+        return BaseResponse(
+            success=False,
+            message="Invalid phone number format",
+            errors=["INVALID_PHONE_NUMBER"]
+        )
+    
+    # 요청 제한 확인
+    if not sms_service.check_rate_limit(normalized_phone):
+        return BaseResponse(
+            success=False,
+            message="SMS rate limit exceeded",
+            errors=["RATE_LIMIT_EXCEEDED"]
+        )
+    
+    # 최근 발송 내역 확인
+    recent_verification = session.phone_verifications.filter(
+        phone_number=normalized_phone
+    ).order_by('-created_at').first()
+    
+    if recent_verification and not recent_verification.can_resend():
+        return BaseResponse(
+            success=False,
+            message="Please wait before requesting another SMS",
+            errors=["SMS_COOLDOWN_ACTIVE"]
+        )
+    
+    try:
+        # 인증번호 생성
+        verification_code = sms_service.generate_verification_code()
+        
+        # SMS 발송
+        sms_result = sms_service.send_verification_sms(normalized_phone, verification_code)
+        
+        if sms_result['success']:
+            # 인증 레코드 생성
+            phone_verification = PhoneVerification.objects.create(
+                session=session,
+                phone_number=normalized_phone,
+                verification_code=verification_code,
+                sms_sid=sms_result.get('sms_sid', ''),
+                sms_status=sms_result.get('status', '')
+            )
+            
+            # 세션 정보 업데이트
+            session.phone_number = normalized_phone
+            session.save()
+            
+            # 로그 기록
+            VerificationLog.objects.create(
+                session=session,
+                event_type=VerificationLog.EventType.PHONE_SENT,
+                description=f"SMS 인증번호를 {normalized_phone}로 발송했습니다",
+                ip_address=request.META.get('REMOTE_ADDR'),
+                metadata={'phone_number': normalized_phone, 'sms_sid': sms_result.get('sms_sid')}
+            )
+            
+            return BaseResponse(
+                success=True,
+                message="SMS verification code sent successfully",
+                data={
+                    'phone_number': normalized_phone,
+                    'expires_at': phone_verification.expires_at.isoformat(),
+                    'attempts_remaining': phone_verification.max_attempts
+                }
+            )
+        else:
+            return BaseResponse(
+                success=False,
+                message="Failed to send SMS",
+                errors=[sms_result.get('error', 'Unknown error')]
+            )
+            
+    except Exception as e:
+        return BaseResponse(
+            success=False,
+            message="SMS sending failed",
+            errors=[str(e)]
+        )
+
+@router.post("/phone/verify", response=BaseResponse)
+def verify_phone_code(request, payload: VerifyPhoneRequest):
+    """휴대폰 인증번호 확인"""
+    
+    session = get_object_or_404(VerificationSession, session_key=payload.session_key)
+    
+    if session.is_expired():
+        return BaseResponse(
+            success=False,
+            message="Verification session expired",
+            errors=["SESSION_EXPIRED"]
+        )
+    
+    # 최근 인증 요청 조회
+    phone_verification = session.phone_verifications.filter(
+        phone_number=payload.phone_number,
+        is_verified=False
+    ).order_by('-created_at').first()
+    
+    if not phone_verification:
+        return BaseResponse(
+            success=False,
+            message="No pending phone verification found",
+            errors=["NO_PENDING_VERIFICATION"]
+        )
+    
+    if phone_verification.is_expired():
+        return BaseResponse(
+            success=False,
+            message="Verification code expired",
+            errors=["CODE_EXPIRED"]
+        )
+    
+    if phone_verification.attempts >= phone_verification.max_attempts:
+        return BaseResponse(
+            success=False,
+            message="Maximum attempts exceeded",
+            errors=["MAX_ATTEMPTS_EXCEEDED"]
+        )
+    
+    # 인증번호 확인
+    phone_verification.attempts += 1
+    
+    if phone_verification.verification_code == payload.verification_code:
+        # 인증 성공
+        phone_verification.is_verified = True
+        phone_verification.verified_at = timezone.now()
+        phone_verification.save()
+        
+        # 세션 상태 업데이트
+        session.status = VerificationSession.VerificationStatus.PHONE_VERIFIED
+        session.current_step = min(session.current_step + 1, session.max_step)
+        session.verification_score += 25.0  # 각 단계당 25점
+        session.save()
+        
+        # 로그 기록
+        VerificationLog.objects.create(
+            session=session,
+            event_type=VerificationLog.EventType.PHONE_VERIFIED,
+            description="휴대폰 인증이 완료되었습니다",
+            ip_address=request.META.get('REMOTE_ADDR'),
+            metadata={'phone_number': payload.phone_number}
+        )
+        
+        return BaseResponse(
+            success=True,
+            message="Phone verification completed successfully",
+            data={
+                'verified': True,
+                'current_step': session.current_step,
+                'next_step': 'email' if session.current_step <= session.max_step else 'completed'
+            }
+        )
+    else:
+        # 인증 실패
+        phone_verification.save()
+        
+        return BaseResponse(
+            success=False,
+            message="Invalid verification code",
+            errors=["INVALID_CODE"],
+            data={
+                'attempts_remaining': phone_verification.max_attempts - phone_verification.attempts
+            }
+        )
+
+# 이메일 인증 엔드포인트
+@router.post("/email/send", response=BaseResponse)
+def send_email_verification(request, payload: SendEmailRequest):
+    """이메일 인증번호 발송"""
+    
+    session = get_object_or_404(VerificationSession, session_key=payload.session_key)
+    
+    if session.is_expired():
+        return BaseResponse(
+            success=False,
+            message="Verification session expired",
+            errors=["SESSION_EXPIRED"]
+        )
+    
+    # 이메일 유효성 검사
+    if not email_service.validate_email(payload.email):
+        return BaseResponse(
+            success=False,
+            message="Invalid email format",
+            errors=["INVALID_EMAIL"]
+        )
+    
+    # 요청 제한 확인
+    if not email_service.check_rate_limit(payload.email):
+        return BaseResponse(
+            success=False,
+            message="Email rate limit exceeded",
+            errors=["RATE_LIMIT_EXCEEDED"]
+        )
+    
+    try:
+        # 인증번호 및 토큰 생성
+        verification_code = email_service.generate_verification_code()
+        verification_token = uuid.uuid4()
+        
+        # 이메일 발송
+        email_result = email_service.send_verification_email(
+            payload.email, verification_code, str(verification_token)
+        )
+        
+        if email_result['success']:
+            # 인증 레코드 생성
+            email_verification = EmailVerification.objects.create(
+                session=session,
+                email=payload.email,
+                verification_code=verification_code,
+                verification_token=verification_token
+            )
+            
+            # 세션 정보 업데이트
+            session.email = payload.email
+            session.save()
+            
+            # 로그 기록
+            VerificationLog.objects.create(
+                session=session,
+                event_type=VerificationLog.EventType.EMAIL_SENT,
+                description=f"이메일 인증번호를 {payload.email}로 발송했습니다",
+                ip_address=request.META.get('REMOTE_ADDR'),
+                metadata={'email': payload.email}
+            )
+            
+            return BaseResponse(
+                success=True,
+                message="Email verification code sent successfully",
+                data={
+                    'email': payload.email,
+                    'expires_at': email_verification.expires_at.isoformat(),
+                    'attempts_remaining': email_verification.max_attempts
+                }
+            )
+        else:
+            return BaseResponse(
+                success=False,
+                message="Failed to send email",
+                errors=[email_result.get('error', 'Unknown error')]
+            )
+            
+    except Exception as e:
+        return BaseResponse(
+            success=False,
+            message="Email sending failed",
+            errors=[str(e)]
+        )
+
+@router.post("/email/verify", response=BaseResponse)
+def verify_email_code(request, payload: VerifyEmailRequest):
+    """이메일 인증번호 확인"""
+    
+    session = get_object_or_404(VerificationSession, session_key=payload.session_key)
+    
+    if session.is_expired():
+        return BaseResponse(
+            success=False,
+            message="Verification session expired",
+            errors=["SESSION_EXPIRED"]
+        )
+    
+    # 최근 인증 요청 조회
+    email_verification = session.email_verifications.filter(
+        email=payload.email,
+        is_verified=False
+    ).order_by('-created_at').first()
+    
+    if not email_verification:
+        return BaseResponse(
+            success=False,
+            message="No pending email verification found",
+            errors=["NO_PENDING_VERIFICATION"]
+        )
+    
+    if email_verification.is_expired():
+        return BaseResponse(
+            success=False,
+            message="Verification code expired",
+            errors=["CODE_EXPIRED"]
+        )
+    
+    if email_verification.attempts >= email_verification.max_attempts:
+        return BaseResponse(
+            success=False,
+            message="Maximum attempts exceeded",
+            errors=["MAX_ATTEMPTS_EXCEEDED"]
+        )
+    
+    # 인증번호 확인
+    email_verification.attempts += 1
+    
+    if email_verification.verification_code == payload.verification_code:
+        # 인증 성공
+        email_verification.is_verified = True
+        email_verification.verified_at = timezone.now()
+        email_verification.save()
+        
+        # 세션 상태 업데이트
+        session.status = VerificationSession.VerificationStatus.EMAIL_VERIFIED
+        session.current_step = min(session.current_step + 1, session.max_step)
+        session.verification_score += 25.0
+        session.save()
+        
+        # 로그 기록
+        VerificationLog.objects.create(
+            session=session,
+            event_type=VerificationLog.EventType.EMAIL_VERIFIED,
+            description="이메일 인증이 완료되었습니다",
+            ip_address=request.META.get('REMOTE_ADDR'),
+            metadata={'email': payload.email}
+        )
+        
+        return BaseResponse(
+            success=True,
+            message="Email verification completed successfully",
+            data={
+                'verified': True,
+                'current_step': session.current_step,
+                'next_step': 'id_card' if session.current_step <= session.max_step else 'completed'
+            }
+        )
+    else:
+        # 인증 실패
+        email_verification.save()
+        
+        return BaseResponse(
+            success=False,
+            message="Invalid verification code",
+            errors=["INVALID_CODE"],
+            data={
+                'attempts_remaining': email_verification.max_attempts - email_verification.attempts
+            }
+        )
+
+# 신분증 인증 엔드포인트
+@router.post("/id-card/upload", response=BaseResponse)
+def upload_id_card(
+    request,
+    session_key: str,
+    id_card_type: str,
+    front_image: UploadedFile = File(...),
+    back_image: UploadedFile = File(None)
+):
+    """신분증 이미지 업로드"""
+    
+    session = get_object_or_404(VerificationSession, session_key=session_key)
+    
+    if session.is_expired():
+        return BaseResponse(
+            success=False,
+            message="Verification session expired",
+            errors=["SESSION_EXPIRED"]
+        )
+    
+    # 신분증 타입 유효성 검사
+    allowed_types = ['resident_card', 'driver_license', 'passport']
+    if id_card_type not in allowed_types:
+        return BaseResponse(
+            success=False,
+            message="Invalid ID card type",
+            errors=["INVALID_ID_CARD_TYPE"]
+        )
+    
+    try:
+        # 파일 저장
+        front_path = f"id_cards/front/{session.id}_{int(time.time())}_front.jpg"
+        back_path = None
+        
+        with open(f"media/{front_path}", 'wb+') as destination:
+            for chunk in front_image.chunks():
+                destination.write(chunk)
+        
+        if back_image:
+            back_path = f"id_cards/back/{session.id}_{int(time.time())}_back.jpg"
+            with open(f"media/{back_path}", 'wb+') as destination:
+                for chunk in back_image.chunks():
+                    destination.write(chunk)
+        
+        # 신분증 인증 레코드 생성
+        id_card_verification = IDCardVerification.objects.create(
+            session=session,
+            id_card_type=id_card_type,
+            front_image=front_path,
+            back_image=back_path,
+            status=IDCardVerification.VerificationStatus.PENDING
+        )
+        
+        # 비동기 처리를 위해 Celery 태스크 실행
+        process_id_card_verification.delay(str(id_card_verification.id))
+        
+        # 로그 기록
+        VerificationLog.objects.create(
+            session=session,
+            event_type=VerificationLog.EventType.ID_CARD_UPLOADED,
+            description="신분증 이미지가 업로드되었습니다",
+            ip_address=request.META.get('REMOTE_ADDR'),
+            metadata={
+                'id_card_type': id_card_type,
+                'has_back_image': bool(back_image)
+            }
+        )
+        
+        return BaseResponse(
+            success=True,
+            message="ID card uploaded successfully",
+            data={
+                'verification_id': str(id_card_verification.id),
+                'status': id_card_verification.status,
+                'estimated_processing_time': '30-60 seconds'
+            }
+        )
+        
+    except Exception as e:
+        return BaseResponse(
+            success=False,
+            message="ID card upload failed",
+            errors=[str(e)]
+        )
+
+@router.get("/id-card/{verification_id}/status", response=IDCardStatusResponse)
+def get_id_card_status(request, verification_id: str):
+    """신분증 처리 상태 조회"""
+    
+    id_card_verification = get_object_or_404(IDCardVerification, id=verification_id)
+    
+    return IDCardStatusResponse(
+        status=id_card_verification.status,
+        confidence_score=id_card_verification.confidence_score,
+        name_match=id_card_verification.name_match,
+        birth_date_match=id_card_verification.birth_date_match,
+        error_message=id_card_verification.error_message
+    )
+
+# 얼굴 인증 엔드포인트
+@router.post("/face/upload", response=BaseResponse)
+def upload_face_image(
+    request,
+    session_key: str,
+    selfie_image: UploadedFile = File(...)
+):
+    """얼굴 이미지 업로드"""
+    
+    session = get_object_or_404(VerificationSession, session_key=session_key)
+    
+    if session.is_expired():
+        return BaseResponse(
+            success=False,
+            message="Verification session expired",
+            errors=["SESSION_EXPIRED"]
+        )
+    
+    try:
+        # 파일 저장
+        selfie_path = f"face_verification/{session.id}_{int(time.time())}_selfie.jpg"
+        
+        with open(f"media/{selfie_path}", 'wb+') as destination:
+            for chunk in selfie_image.chunks():
+                destination.write(chunk)
+        
+        # 얼굴 인증 레코드 생성
+        face_verification = FaceVerification.objects.create(
+            session=session,
+            selfie_image=selfie_path,
+            status=FaceVerification.VerificationStatus.PENDING
+        )
+        
+        # 비동기 처리를 위해 Celery 태스크 실행
+        process_face_verification.delay(str(face_verification.id))
+        
+        # 로그 기록
+        VerificationLog.objects.create(
+            session=session,
+            event_type=VerificationLog.EventType.FACE_UPLOADED,
+            description="얼굴 이미지가 업로드되었습니다",
+            ip_address=request.META.get('REMOTE_ADDR'),
+            metadata={'selfie_uploaded': True}
+        )
+        
+        return BaseResponse(
+            success=True,
+            message="Face image uploaded successfully",
+            data={
+                'verification_id': str(face_verification.id),
+                'status': face_verification.status,
+                'estimated_processing_time': '10-30 seconds'
+            }
+        )
+        
+    except Exception as e:
+        return BaseResponse(
+            success=False,
+            message="Face image upload failed",
+            errors=[str(e)]
+        )
+
+# 인증 완료 확인
+@router.post("/complete/{session_key}", response=BaseResponse)
+@transaction.atomic
+def complete_verification(request, session_key: str):
+    """본인인증 완료 처리"""
+    
+    session = get_object_or_404(VerificationSession, session_key=session_key)
+    
+    if session.is_expired():
+        return BaseResponse(
+            success=False,
+            message="Verification session expired",
+            errors=["SESSION_EXPIRED"]
+        )
+    
+    # 모든 단계 완료 확인
+    phone_verified = session.phone_verifications.filter(is_verified=True).exists()
+    email_verified = session.email_verifications.filter(is_verified=True).exists()
+    id_card_verified = session.id_card_verifications.filter(status='success').exists()
+    face_verified = session.face_verifications.filter(status='success').exists()
+    
+    required_verifications = [phone_verified, email_verified]
+    if session.max_step >= 3:
+        required_verifications.append(id_card_verified)
+    if session.max_step >= 4:
+        required_verifications.append(face_verified)
+    
+    if not all(required_verifications):
+        return BaseResponse(
+            success=False,
+            message="Not all verification steps completed",
+            errors=["INCOMPLETE_VERIFICATION"]
+        )
+    
+    # 인증 완료 처리
+    session.status = VerificationSession.VerificationStatus.COMPLETED
+    session.verified_at = timezone.now()
+    session.verification_score = 100.0
+    session.save()
+    
+    # 완료 토큰 생성
+    verification_token = str(uuid.uuid4())
+    cache.set(f"verification_token:{verification_token}", str(session.id), 3600 * 24)  # 24시간 유효
+    
+    # 검증된 개인정보 수집
+    personal_data = {}
+    
+    # 신분증에서 추출된 정보
+    id_card = session.id_card_verifications.filter(status='success').first()
+    if id_card:
+        personal_data.update(id_card.extracted_data)
+    
+    # 암호화하여 저장
+    session.encrypt_personal_data(personal_data)
+    session.save()
+    
+    # 로그 기록
+    VerificationLog.objects.create(
+        session=session,
+        event_type=VerificationLog.EventType.VERIFICATION_COMPLETED,
+        description="본인인증이 완료되었습니다",
+        ip_address=request.META.get('REMOTE_ADDR'),
+        metadata={
+            'verification_score': session.verification_score,
+            'steps_completed': session.current_step
+        }
+    )
+    
+    return BaseResponse(
+        success=True,
+        message="Identity verification completed successfully",
+        data={
+            'session_id': str(session.id),
+            'verification_token': verification_token,
+            'verified_at': session.verified_at.isoformat(),
+            'verification_score': session.verification_score,
+            'verified_phone': session.phone_number,
+            'verified_email': session.email,
+            'verified_name': personal_data.get('name'),
+            'verified_birth_date': personal_data.get('birth_date')
+        }
+    )
+```
+
+## 비동기 태스크 처리
+
+### 1. Celery 태스크 구현
+
+```python
+# verification/tasks.py
+from celery import shared_task
+from django.utils import timezone
+from datetime import datetime
+import time
+
+@shared_task
+def process_id_card_verification(verification_id: str):
+    """신분증 인증 비동기 처리"""
+    
+    from .models import IDCardVerification, VerificationSession, VerificationLog
+    from .services.ocr_service import OCRService
+    
+    try:
+        verification = IDCardVerification.objects.get(id=verification_id)
+        verification.status = IDCardVerification.VerificationStatus.PROCESSING
+        verification.save()
+        
+        start_time = time.time()
+        ocr_service = OCRService()
+        
+        # 이미지 유효성 검사
+        validation_result = ocr_service.validate_id_card_image(verification.front_image.path)
+        
+        if not validation_result['valid']:
+            verification.status = IDCardVerification.VerificationStatus.FAILED
+            verification.error_message = validation_result['error']
+            verification.processed_at = timezone.now()
+            verification.processing_duration = time.time() - start_time
+            verification.save()
+            return
+        
+        # OCR 처리
+        ocr_result = ocr_service.extract_id_card_data(
+            verification.front_image.path,
+            verification.id_card_type
+        )
+        
+        if ocr_result['success']:
+            verification.extracted_data = ocr_result['parsed_data']
+            verification.confidence_score = ocr_result['confidence_score']
+            verification.verification_details = ocr_result
+            
+            # 신뢰도 확인
+            if verification.confidence_score >= 0.8:
+                verification.status = IDCardVerification.VerificationStatus.SUCCESS
+                
+                # 세션 상태 업데이트
+                session = verification.session
+                session.status = VerificationSession.VerificationStatus.ID_CARD_VERIFIED
+                session.current_step = min(session.current_step + 1, session.max_step)
+                session.verification_score += 25.0
+                session.save()
+                
+                # 로그 기록
+                VerificationLog.objects.create(
+                    session=session,
+                    event_type=VerificationLog.EventType.ID_CARD_VERIFIED,
+                    description="신분증 인증이 완료되었습니다",
+                    metadata={
+                        'confidence_score': verification.confidence_score,
+                        'extracted_name': ocr_result['parsed_data'].get('name')
+                    }
+                )
+            else:
+                verification.status = IDCardVerification.VerificationStatus.REJECTED
+                verification.error_message = "OCR confidence score too low"
+        else:
+            verification.status = IDCardVerification.VerificationStatus.FAILED
+            verification.error_message = ocr_result.get('error', 'OCR processing failed')
+        
+        verification.processed_at = timezone.now()
+        verification.processing_duration = time.time() - start_time
+        verification.save()
+        
+    except Exception as e:
+        verification.status = IDCardVerification.VerificationStatus.FAILED
+        verification.error_message = str(e)
+        verification.processed_at = timezone.now()
+        verification.save()
+
+@shared_task
+def process_face_verification(verification_id: str):
+    """얼굴 인증 비동기 처리"""
+    
+    from .models import FaceVerification, VerificationSession, VerificationLog
+    from .services.face_service import FaceRecognitionService
+    
+    try:
+        verification = FaceVerification.objects.get(id=verification_id)
+        verification.status = FaceVerification.VerificationStatus.PROCESSING
+        verification.save()
+        
+        start_time = time.time()
+        face_service = FaceRecognitionService()
+        
+        # 생체 감지
+        liveness_result = face_service.detect_liveness(verification.selfie_image.path)
+        
+        if liveness_result['success']:
+            verification.liveness_score = liveness_result['liveness_score']
+            verification.is_live_person = liveness_result['is_live']
+            
+            if verification.is_live_person:
+                verification.status = FaceVerification.VerificationStatus.SUCCESS
+                
+                # 세션 상태 업데이트
+                session = verification.session
+                session.status = VerificationSession.VerificationStatus.FACE_VERIFIED
+                session.current_step = min(session.current_step + 1, session.max_step)
+                session.verification_score += 25.0
+                session.save()
+                
+                # 로그 기록
+                VerificationLog.objects.create(
+                    session=session,
+                    event_type=VerificationLog.EventType.FACE_VERIFIED,
+                    description="얼굴 인증이 완료되었습니다",
+                    metadata={
+                        'liveness_score': verification.liveness_score,
+                        'is_live_person': verification.is_live_person
+                    }
+                )
+            else:
+                verification.status = FaceVerification.VerificationStatus.FAILED
+                verification.error_message = "Liveness detection failed"
+        else:
+            verification.status = FaceVerification.VerificationStatus.FAILED
+            verification.error_message = liveness_result.get('error', 'Face processing failed')
+        
+        verification.processed_at = timezone.now()
+        verification.processing_duration = time.time() - start_time
+        verification.save()
+        
+    except Exception as e:
+        verification.status = FaceVerification.VerificationStatus.FAILED
+        verification.error_message = str(e)
+        verification.processed_at = timezone.now()
+        verification.save()
+
+@shared_task
+def cleanup_expired_sessions():
+    """만료된 인증 세션 정리"""
+    
+    from .models import VerificationSession
+    
+    expired_sessions = VerificationSession.objects.filter(
+        expires_at__lt=timezone.now(),
+        status__in=[
+            VerificationSession.VerificationStatus.PENDING,
+            VerificationSession.VerificationStatus.PHONE_VERIFIED,
+            VerificationSession.VerificationStatus.EMAIL_VERIFIED,
+        ]
+    )
+    
+    count = 0
+    for session in expired_sessions:
+        session.status = VerificationSession.VerificationStatus.EXPIRED
+        session.save()
+        count += 1
+    
+    return f"Cleaned up {count} expired sessions"
+```
+
+## 프론트엔드 연동 예시
+
+### 1. React 컴포넌트
+
+{% raw %}
+```jsx
+// components/IdentityVerification.jsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const IdentityVerification = ({ onComplete }) => {
+    const [session, setSession] = useState(null);
+    const [currentStep, setCurrentStep] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    
+    // 단계별 상태
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [email, setEmail] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
+    const [selectedFiles, setSelectedFiles] = useState({});
+    
+    // API 클라이언트 설정
+    const api = axios.create({
+        baseURL: '/api/verification',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    
+    // 인증 세션 생성
+    const createSession = async () => {
+        try {
+            setLoading(true);
+            const response = await api.post('/session/create', {
+                phone_number: phoneNumber,
+                email: email,
+                full_verification: true
+            });
+            
+            if (response.data.success) {
+                setSession(response.data.data);
+                setCurrentStep(1);
+            } else {
+                setError(response.data.message);
+            }
+        } catch (err) {
+            setError('인증 세션 생성에 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // SMS 발송
+    const sendSMS = async () => {
+        try {
+            setLoading(true);
+            const response = await api.post('/phone/send', {
+                session_key: session.session_key,
+                phone_number: phoneNumber
+            });
+            
+            if (response.data.success) {
+                alert('인증번호가 발송되었습니다.');
+            } else {
+                setError(response.data.message);
+            }
+        } catch (err) {
+            setError('SMS 발송에 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // 휴대폰 인증 확인
+    const verifyPhone = async () => {
+        try {
+            setLoading(true);
+            const response = await api.post('/phone/verify', {
+                session_key: session.session_key,
+                phone_number: phoneNumber,
+                verification_code: verificationCode
+            });
+            
+            if (response.data.success) {
+                setCurrentStep(2);
+                setVerificationCode('');
+            } else {
+                setError(response.data.message);
+            }
+        } catch (err) {
+            setError('휴대폰 인증에 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // 이메일 발송
+    const sendEmail = async () => {
+        try {
+            setLoading(true);
+            const response = await api.post('/email/send', {
+                session_key: session.session_key,
+                email: email
+            });
+            
+            if (response.data.success) {
+                alert('인증번호가 발송되었습니다.');
+            } else {
+                setError(response.data.message);
+            }
+        } catch (err) {
+            setError('이메일 발송에 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // 이메일 인증 확인
+    const verifyEmail = async () => {
+        try {
+            setLoading(true);
+            const response = await api.post('/email/verify', {
+                session_key: session.session_key,
+                email: email,
+                verification_code: verificationCode
+            });
+            
+            if (response.data.success) {
+                setCurrentStep(3);
+                setVerificationCode('');
+            } else {
+                setError(response.data.message);
+            }
+        } catch (err) {
+            setError('이메일 인증에 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // 신분증 업로드
+    const uploadIDCard = async (idCardType) => {
+        try {
+            setLoading(true);
+            const formData = new FormData();
+            formData.append('session_key', session.session_key);
+            formData.append('id_card_type', idCardType);
+            formData.append('front_image', selectedFiles.front);
+            if (selectedFiles.back) {
+                formData.append('back_image', selectedFiles.back);
+            }
+            
+            const response = await api.post('/id-card/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            if (response.data.success) {
+                // 처리 상태 확인 시작
+                checkIDCardStatus(response.data.data.verification_id);
+            } else {
+                setError(response.data.message);
+            }
+        } catch (err) {
+            setError('신분증 업로드에 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // 신분증 처리 상태 확인
+    const checkIDCardStatus = async (verificationId) => {
+        const checkStatus = async () => {
+            try {
+                const response = await api.get(`/id-card/${verificationId}/status`);
+                const status = response.data.status;
+                
+                if (status === 'success') {
+                    setCurrentStep(4);
+                    return;
+                } else if (status === 'failed' || status === 'rejected') {
+                    setError('신분증 인증에 실패했습니다.');
+                    return;
+                }
+                
+                // 처리 중이면 3초 후 다시 확인
+                setTimeout(checkStatus, 3000);
+            } catch (err) {
+                setError('상태 확인 중 오류가 발생했습니다.');
+            }
+        };
+        
+        checkStatus();
+    };
+    
+    // 얼굴 인증 업로드
+    const uploadFaceImage = async () => {
+        try {
+            setLoading(true);
+            const formData = new FormData();
+            formData.append('session_key', session.session_key);
+            formData.append('selfie_image', selectedFiles.selfie);
+            
+            const response = await api.post('/face/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            if (response.data.success) {
+                // 처리 완료 후 최종 단계로
+                setTimeout(() => {
+                    completeVerification();
+                }, 10000); // 10초 후 완료 처리
+            } else {
+                setError(response.data.message);
+            }
+        } catch (err) {
+            setError('얼굴 인증 업로드에 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // 인증 완료
+    const completeVerification = async () => {
+        try {
+            setLoading(true);
+            const response = await api.post(`/complete/${session.session_key}`);
+            
+            if (response.data.success) {
+                onComplete(response.data.data);
+            } else {
+                setError(response.data.message);
+            }
+        } catch (err) {
+            setError('인증 완료 처리에 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // 진행 단계 렌더링
+    const renderStep = () => {
+        switch (currentStep) {
+            case 0:
+                return (
+                    <div className="step-container">
+                        <h3>본인인증 시작</h3>
+                        <div className="form-group">
+                            <label>휴대폰 번호</label>
+                            <input
+                                type="tel"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                placeholder="010-0000-0000"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>이메일 주소</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="example@email.com"
+                            />
+                        </div>
+                        <button onClick={createSession} disabled={loading}>
+                            인증 시작하기
+                        </button>
+                    </div>
+                );
+                
+            case 1:
+                return (
+                    <div className="step-container">
+                        <h3>1단계: 휴대폰 인증</h3>
+                        <p>등록하신 휴대폰번호: {phoneNumber}</p>
+                        <button onClick={sendSMS} disabled={loading}>
+                            인증번호 발송
+                        </button>
+                        <div className="form-group">
+                            <label>인증번호</label>
+                            <input
+                                type="text"
+                                value={verificationCode}
+                                onChange={(e) => setVerificationCode(e.target.value)}
+                                placeholder="6자리 숫자"
+                                maxLength="6"
+                            />
+                        </div>
+                        <button onClick={verifyPhone} disabled={loading || !verificationCode}>
+                            인증 확인
+                        </button>
+                    </div>
+                );
+                
+            case 2:
+                return (
+                    <div className="step-container">
+                        <h3>2단계: 이메일 인증</h3>
+                        <p>등록하신 이메일: {email}</p>
+                        <button onClick={sendEmail} disabled={loading}>
+                            인증번호 발송
+                        </button>
+                        <div className="form-group">
+                            <label>인증번호</label>
+                            <input
+                                type="text"
+                                value={verificationCode}
+                                onChange={(e) => setVerificationCode(e.target.value)}
+                                placeholder="6자리 숫자"
+                                maxLength="6"
+                            />
+                        </div>
+                        <button onClick={verifyEmail} disabled={loading || !verificationCode}>
+                            인증 확인
+                        </button>
+                    </div>
+                );
+                
+            case 3:
+                return (
+                    <div className="step-container">
+                        <h3>3단계: 신분증 인증</h3>
+                        <div className="file-upload">
+                            <label>신분증 앞면</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setSelectedFiles({
+                                    ...selectedFiles,
+                                    front: e.target.files[0]
+                                })}
+                            />
+                        </div>
+                        <div className="file-upload">
+                            <label>신분증 뒷면 (선택사항)</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setSelectedFiles({
+                                    ...selectedFiles,
+                                    back: e.target.files[0]
+                                })}
+                            />
+                        </div>
+                        <button 
+                            onClick={() => uploadIDCard('resident_card')} 
+                            disabled={loading || !selectedFiles.front}
+                        >
+                            주민등록증 인증
+                        </button>
+                        <button 
+                            onClick={() => uploadIDCard('driver_license')} 
+                            disabled={loading || !selectedFiles.front}
+                        >
+                            운전면허증 인증
+                        </button>
+                    </div>
+                );
+                
+            case 4:
+                return (
+                    <div className="step-container">
+                        <h3>4단계: 얼굴 인증</h3>
+                        <p>본인 얼굴이 선명하게 나온 셀피를 업로드해주세요.</p>
+                        <div className="file-upload">
+                            <label>셀피 이미지</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setSelectedFiles({
+                                    ...selectedFiles,
+                                    selfie: e.target.files[0]
+                                })}
+                            />
+                        </div>
+                        <button 
+                            onClick={uploadFaceImage} 
+                            disabled={loading || !selectedFiles.selfie}
+                        >
+                            얼굴 인증하기
+                        </button>
+                    </div>
+                );
+                
+            default:
+                return (
+                    <div className="step-container">
+                        <h3>인증 완료</h3>
+                        <p>본인인증이 성공적으로 완료되었습니다.</p>
+                    </div>
+                );
+        }
+    };
+    
+    return (
+        <div className="identity-verification">
+            <div className="progress-bar">
+                <div className="progress" style={{ width: `${(currentStep / 4) * 100}%` }}></div>
+            </div>
+            
+            {error && (
+                <div className="error-message">
+                    {error}
+                    <button onClick={() => setError(null)}>×</button>
+                </div>
+            )}
+            
+            {loading && (
+                <div className="loading-overlay">
+                    <div className="spinner"></div>
+                    <p>처리 중입니다...</p>
+                </div>
+            )}
+            
+            {renderStep()}
+        </div>
+    );
+};
+
+export default IdentityVerification;
+```
+{% endraw %}
+
+### 2. CSS 스타일링
+
+```css
+/* styles/IdentityVerification.css */
+.identity-verification {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    transition: width 0.3s ease;
+}
+
+.step-container {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.step-container h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.file-upload {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    text-align: center;
+    transition: border-color 0.3s ease;
+}
+
+.file-upload:hover {
+    border-color: #4CAF50;
+}
+
+.file-upload label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #555;
+}
+
+.file-upload input[type="file"] {
+    border: none;
+    background: none;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+button:hover:not(:disabled) {
+    background: #45a049;
+}
+
+button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+.error-message {
+    background: #ffebee;
+    color: #c62828;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.error-message button {
+    background: none;
+    color: #c62828;
+    padding: 0;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-overlay p {
+    color: white;
+    font-size: 18px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .identity-verification {
+        padding: 10px;
+    }
+    
+    .step-container {
+        padding: 20px;
+    }
+    
+    .step-container h3 {
+        font-size: 20px;
+    }
+    
+    button {
+        width: 100%;
+        margin-right: 0;
+    }
+}
+```
+
+## 보안 고려사항
+
+### 1. 데이터 보호
+
+```python
+# verification/security.py
+from cryptography.fernet import Fernet
+from django.conf import settings
+import hashlib
+import hmac
+import base64
+
+class SecurityManager:
+    """보안 관리 클래스"""
+    
+    @staticmethod
+    def hash_sensitive_data(data: str) -> str:
+        """민감 데이터 해싱"""
+        return hashlib.sha256(data.encode()).hexdigest()
+    
+    @staticmethod
+    def encrypt_personal_data(data: str) -> str:
+        """개인정보 암호화"""
+        key = settings.SECRET_KEY.encode()[:32].ljust(32, b'0')
+        f = Fernet(base64.urlsafe_b64encode(key))
+        return base64.b64encode(f.encrypt(data.encode())).decode()
+    
+    @staticmethod
+    def decrypt_personal_data(encrypted_data: str) -> str:
+        """개인정보 복호화"""
+        key = settings.SECRET_KEY.encode()[:32].ljust(32, b'0')
+        f = Fernet(base64.urlsafe_b64encode(key))
+        return f.decrypt(base64.b64decode(encrypted_data.encode())).decode()
+    
+    @staticmethod
+    def generate_csrf_token(session_key: str) -> str:
+        """CSRF 토큰 생성"""
+        return hmac.new(
+            settings.SECRET_KEY.encode(),
+            session_key.encode(),
+            hashlib.sha256
+        ).hexdigest()
+    
+    @staticmethod
+    def verify_csrf_token(session_key: str, token: str) -> bool:
+        """CSRF 토큰 검증"""
+        expected_token = SecurityManager.generate_csrf_token(session_key)
+        return hmac.compare_digest(expected_token, token)
+```
+
+### 2. API 보안 설정
+
+```python
+# verification/middleware.py
+from django.http import JsonResponse
+from django.core.cache import cache
+import time
+
+class RateLimitMiddleware:
+    """API 요청 제한 미들웨어"""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        if request.path.startswith('/api/verification/'):
+            client_ip = self.get_client_ip(request)
+            
+            # IP별 요청 제한 확인
+            if not self.check_rate_limit(client_ip):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Rate limit exceeded',
+                    'retry_after': 60
+                }, status=429)
+        
+        response = self.get_response(request)
+        return response
+    
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
+    def check_rate_limit(self, client_ip):
+        cache_key = f"rate_limit:{client_ip}"
+        current_requests = cache.get(cache_key, 0)
+        
+        if current_requests >= 100:  # 시간당 100회 제한
+            return False
+        
+        cache.set(cache_key, current_requests + 1, 3600)  # 1시간
+        return True
+```
+
+## 결론
+
+Django Ninja를 활용한 본인인증 시스템을 통해 다음과 같은 이점을 얻을 수 있습니다:
+
+### 🎯 주요 장점
+
+1. **강력한 보안**: 다단계 인증으로 높은 보안 수준 제공
+2. **사용자 경험**: 직관적이고 단계별 안내로 쉬운 인증 과정
+3. **확장성**: 모듈러 구조로 새로운 인증 방식 추가 용이
+4. **신뢰성**: 비동기 처리와 에러 핸들링으로 안정적인 서비스
+5. **규정 준수**: 개인정보보호법 등 관련 법규 준수
+
+### 💡 실무 적용 포인트
+
+- **금융 서비스**: 은행, 증권, 보험 등 금융 앱의 본인인증
+- **의료 서비스**: 병원 예약, 처방전 조회 등 의료 정보 접근
+- **전자상거래**: 고액 결제, 회원가입 시 신원 확인
+- **공공 서비스**: 정부 민원, 증명서 발급 등 공공 서비스
+
+### 🔧 확장 가능한 기능
+
+- **생체 인증**: 지문, 홍채 인식 등 추가 생체 인증
+- **블록체인**: 인증 결과의 무결성 보장
+- **AI 기반 검증**: 딥러닝을 활용한 더 정확한 신분증/얼굴 인식
+- **국제 표준**: OAuth 2.0, OpenID Connect 등 표준 프로토콜 연동
+
+이 시스템은 실제 운영 환경에서 바로 활용할 수 있도록 설계되었으며, 각 조직의 요구사항에 맞춰 커스터마이징할 수 있습니다. 특히 Django Ninja의 자동 문서화 기능을 통해 API 문서도 자동으로 생성되어 개발 생산성을 크게 향상시킬 수 있습니다.
