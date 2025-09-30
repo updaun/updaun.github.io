@@ -80,3 +80,5 @@ __pycache__/
 .env
 *.py
 *.json
+
+examples/
