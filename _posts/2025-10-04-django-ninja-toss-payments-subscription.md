@@ -4,6 +4,8 @@ title: "Django Ninja + Toss Payments로 구독 결제 시스템 구축하기"
 date: 2025-10-04 10:00:00 +0900
 categories: [Django, Python, Payment, Subscription]
 tags: [Django, Python, Django-Ninja, Toss-Payments, Subscription, Payment, FastAPI, API, Backend]
+author: "updaun"
+image: "/assets/img/posts/2025-10-04-django-ninja-toss-payments-subscription.webp"
 ---
 
 구독 기반 서비스가 급증하면서 안정적이고 확장 가능한 결제 시스템의 중요성이 커지고 있습니다. 이 글에서는 Django Ninja와 Toss Payments를 활용하여 구독 결제 시스템을 구축하는 전체 과정을 단계별로 살펴보겠습니다.
