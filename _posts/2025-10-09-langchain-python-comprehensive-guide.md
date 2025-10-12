@@ -4,6 +4,8 @@ title: "LangChain Python 완벽 가이드: 실전 예제로 배우는 LLM 애플
 date: 2025-10-09 14:00:00 +0900
 categories: [LangChain, Python, LLM, AI]
 tags: [LangChain, Python, OpenAI, GPT, LLM, AI, Chain, Agent, Vector Store, RAG]
+author: "updaun"
+image: "/assets/img/posts/2025-10-09-langchain-python-comprehensive-guide.webp"
 ---
 
 LangChain은 LLM(Large Language Model)을 활용한 애플리케이션 개발을 위한 강력한 Python 프레임워크입니다. 이 가이드에서는 LangChain의 핵심 개념부터 실전 활용법까지 단계별로 살펴보겠습니다.

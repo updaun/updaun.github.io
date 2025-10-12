@@ -4,6 +4,8 @@ title: "Django-Ninja Docker 배포 완벽 가이드: 실무 최적화 팁과 효
 date: 2025-10-11 10:00:00 +0900
 categories: [Django, Docker, DevOps]
 tags: [Django-Ninja, Docker, FastAPI, API, Container, Deployment, DevOps, Python, Backend]
+author: "updaun"
+image: "/assets/img/posts/2025-10-11-django-ninja-docker-deployment-guide.webp"
 ---
 
 Django-Ninja는 FastAPI의 장점을 Django에 접목한 현대적인 API 프레임워크입니다. 이 글에서는 Django-Ninja 애플리케이션을 Docker로 배포하는 과정을 단계별로 설명하고, 실무에서 사용할 수 있는 최적화 팁과 효율적인 개발 워크플로우를 소개합니다.
