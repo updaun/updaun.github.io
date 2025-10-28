@@ -4179,3 +4179,2530 @@ class RecommendationMonitoringMiddleware:
 ---
 
 ## 📊 7. A/B 테스트 및 성능 분석
+
+추천 시스템의 효과를 측정하고 최적화하기 위한 A/B 테스트 프레임워크와 성능 분석 도구를 구현합니다.
+
+### 7.1 A/B 테스트 프레임워크
+
+```python
+# apps/recommendations/ab_testing.py
+import hashlib
+import random
+import logging
+from typing import Dict, List, Any, Optional, Tuple
+from enum import Enum
+from datetime import datetime, timedelta
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+from django.core.cache import cache
+import json
+import numpy as np
+from scipy import stats
+
+logger = logging.getLogger(__name__)
+
+class ExperimentStatus(models.TextChoices):
+    DRAFT = 'draft', 'Draft'
+    ACTIVE = 'active', 'Active'
+    PAUSED = 'paused', 'Paused'
+    COMPLETED = 'completed', 'Completed'
+
+class ExperimentType(models.TextChoices):
+    ALGORITHM_COMPARISON = 'algorithm', 'Algorithm Comparison'
+    PARAMETER_TUNING = 'parameter', 'Parameter Tuning'
+    UI_VARIATION = 'ui', 'UI Variation'
+    HYBRID_STRATEGY = 'hybrid', 'Hybrid Strategy'
+
+class Experiment(models.Model):
+    """A/B 테스트 실험"""
+    
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    experiment_type = models.CharField(max_length=20, choices=ExperimentType.choices)
+    status = models.CharField(max_length=20, choices=ExperimentStatus.choices, default=ExperimentStatus.DRAFT)
+    
+    # 실험 설정
+    traffic_allocation = models.FloatField(default=1.0)  # 0.0-1.0
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    
+    # 성공 지표
+    primary_metric = models.CharField(max_length=100)  # 'ctr', 'conversion', 'engagement'
+    secondary_metrics = models.JSONField(default=list)
+    
+    # 실험 구성
+    variants = models.JSONField(default=dict)  # {'control': {...}, 'variant_a': {...}}
+    target_sample_size = models.IntegerField(default=1000)
+    confidence_level = models.FloatField(default=0.95)
+    
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'recommendation_experiments'
+    
+    def __str__(self):
+        return f"{self.name} ({self.status})"
+    
+    def is_active(self) -> bool:
+        """실험이 활성 상태인지 확인"""
+        now = timezone.now()
+        return (
+            self.status == ExperimentStatus.ACTIVE and
+            self.start_date <= now <= self.end_date
+        )
+    
+    def get_variant_for_user(self, user_id: int) -> str:
+        """사용자에게 할당된 변형 반환"""
+        
+        if not self.is_active():
+            return 'control'
+        
+        # 일관된 해시 기반 변형 할당
+        hash_input = f"{self.id}_{user_id}".encode('utf-8')
+        hash_value = int(hashlib.md5(hash_input).hexdigest(), 16)
+        
+        # 트래픽 할당 비율 확인
+        if (hash_value % 1000) / 1000.0 > self.traffic_allocation:
+            return 'control'
+        
+        # 변형 선택
+        variants = list(self.variants.keys())
+        variant_index = hash_value % len(variants)
+        
+        return variants[variant_index]
+
+class ExperimentAssignment(models.Model):
+    """실험 할당 기록"""
+    
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
+    user_id = models.IntegerField()
+    variant = models.CharField(max_length=50)
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'experiment_assignments'
+        unique_together = ['experiment', 'user_id']
+
+class ExperimentEvent(models.Model):
+    """실험 이벤트 기록"""
+    
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
+    user_id = models.IntegerField()
+    variant = models.CharField(max_length=50)
+    event_type = models.CharField(max_length=100)  # 'recommendation_click', 'purchase', etc.
+    event_value = models.FloatField(null=True, blank=True)
+    metadata = models.JSONField(default=dict)
+    created = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'experiment_events'
+
+class ABTestManager:
+    """A/B 테스트 관리자"""
+    
+    def __init__(self):
+        self.cache_timeout = 300  # 5분
+    
+    def assign_user_to_experiments(self, user_id: int) -> Dict[str, str]:
+        """사용자를 활성 실험에 할당"""
+        
+        cache_key = f"experiment_assignments_{user_id}"
+        assignments = cache.get(cache_key)
+        
+        if assignments:
+            return assignments
+        
+        # 활성 실험 조회
+        active_experiments = Experiment.objects.filter(
+            status=ExperimentStatus.ACTIVE,
+            start_date__lte=timezone.now(),
+            end_date__gte=timezone.now()
+        )
+        
+        assignments = {}
+        
+        for experiment in active_experiments:
+            # 기존 할당 확인
+            existing_assignment = ExperimentAssignment.objects.filter(
+                experiment=experiment,
+                user_id=user_id
+            ).first()
+            
+            if existing_assignment:
+                variant = existing_assignment.variant
+            else:
+                # 새로운 할당
+                variant = experiment.get_variant_for_user(user_id)
+                
+                # 할당 기록
+                ExperimentAssignment.objects.create(
+                    experiment=experiment,
+                    user_id=user_id,
+                    variant=variant
+                )
+            
+            assignments[experiment.name] = variant
+        
+        # 캐시 저장
+        cache.set(cache_key, assignments, self.cache_timeout)
+        
+        return assignments
+    
+    def get_recommendation_config(self, user_id: int) -> Dict[str, Any]:
+        """사용자의 실험 할당에 따른 추천 설정"""
+        
+        assignments = self.assign_user_to_experiments(user_id)
+        config = {
+            'algorithm': 'weighted_hybrid',  # 기본값
+            'parameters': {},
+            'experiments': assignments
+        }
+        
+        # 실험별 설정 적용
+        for experiment_name, variant in assignments.items():
+            try:
+                experiment = Experiment.objects.get(
+                    name=experiment_name,
+                    status=ExperimentStatus.ACTIVE
+                )
+                
+                variant_config = experiment.variants.get(variant, {})
+                
+                # 알고리즘 실험
+                if experiment.experiment_type == ExperimentType.ALGORITHM_COMPARISON:
+                    config['algorithm'] = variant_config.get('algorithm', config['algorithm'])
+                
+                # 파라미터 튜닝 실험
+                elif experiment.experiment_type == ExperimentType.PARAMETER_TUNING:
+                    config['parameters'].update(variant_config.get('parameters', {}))
+                
+                # 하이브리드 전략 실험
+                elif experiment.experiment_type == ExperimentType.HYBRID_STRATEGY:
+                    config['hybrid_strategy'] = variant_config.get('strategy', 'weighted')
+                    config['strategy_params'] = variant_config.get('params', {})
+                
+            except Experiment.DoesNotExist:
+                logger.warning(f"Experiment {experiment_name} not found")
+        
+        return config
+    
+    def record_event(self, user_id: int, event_type: str, event_value: float = None,
+                    metadata: Dict = None) -> bool:
+        """실험 이벤트 기록"""
+        
+        try:
+            assignments = self.assign_user_to_experiments(user_id)
+            
+            for experiment_name, variant in assignments.items():
+                try:
+                    experiment = Experiment.objects.get(name=experiment_name)
+                    
+                    ExperimentEvent.objects.create(
+                        experiment=experiment,
+                        user_id=user_id,
+                        variant=variant,
+                        event_type=event_type,
+                        event_value=event_value,
+                        metadata=metadata or {}
+                    )
+                    
+                except Experiment.DoesNotExist:
+                    continue
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error recording experiment event: {str(e)}")
+            return False
+    
+    def analyze_experiment(self, experiment_id: int) -> Dict[str, Any]:
+        """실험 결과 분석"""
+        
+        try:
+            experiment = Experiment.objects.get(id=experiment_id)
+            
+            # 변형별 통계 수집
+            variant_stats = {}
+            
+            for variant_name in experiment.variants.keys():
+                stats_data = self._calculate_variant_stats(experiment, variant_name)
+                variant_stats[variant_name] = stats_data
+            
+            # 통계적 유의성 검정
+            significance_results = self._perform_significance_tests(
+                experiment, variant_stats
+            )
+            
+            # 결과 요약
+            analysis_result = {
+                'experiment_id': experiment_id,
+                'experiment_name': experiment.name,
+                'status': experiment.status,
+                'duration_days': (timezone.now() - experiment.start_date).days,
+                'variant_statistics': variant_stats,
+                'significance_tests': significance_results,
+                'recommendations': self._generate_recommendations(
+                    experiment, variant_stats, significance_results
+                )
+            }
+            
+            return analysis_result
+            
+        except Experiment.DoesNotExist:
+            return {'error': 'Experiment not found'}
+        except Exception as e:
+            logger.error(f"Error analyzing experiment: {str(e)}")
+            return {'error': str(e)}
+    
+    def _calculate_variant_stats(self, experiment: Experiment, variant: str) -> Dict[str, Any]:
+        """변형별 통계 계산"""
+        
+        # 할당된 사용자 수
+        total_users = ExperimentAssignment.objects.filter(
+            experiment=experiment,
+            variant=variant
+        ).count()
+        
+        if total_users == 0:
+            return {
+                'total_users': 0,
+                'events': {},
+                'conversion_rate': 0,
+                'confidence_interval': (0, 0)
+            }
+        
+        # 이벤트별 통계
+        events_data = {}
+        
+        # 주요 지표 이벤트
+        primary_events = ExperimentEvent.objects.filter(
+            experiment=experiment,
+            variant=variant,
+            event_type=experiment.primary_metric
+        )
+        
+        primary_count = primary_events.count()
+        primary_conversion = primary_count / total_users if total_users > 0 else 0
+        
+        # 이벤트 값 평균 (매출 등)
+        primary_values = primary_events.exclude(event_value__isnull=True).values_list('event_value', flat=True)
+        avg_value = np.mean(list(primary_values)) if primary_values else 0
+        
+        events_data[experiment.primary_metric] = {
+            'count': primary_count,
+            'conversion_rate': primary_conversion,
+            'average_value': float(avg_value),
+            'total_value': float(np.sum(list(primary_values))) if primary_values else 0
+        }
+        
+        # 보조 지표들
+        for secondary_metric in experiment.secondary_metrics:
+            secondary_events = ExperimentEvent.objects.filter(
+                experiment=experiment,
+                variant=variant,
+                event_type=secondary_metric
+            )
+            
+            secondary_count = secondary_events.count()
+            secondary_conversion = secondary_count / total_users if total_users > 0 else 0
+            
+            events_data[secondary_metric] = {
+                'count': secondary_count,
+                'conversion_rate': secondary_conversion
+            }
+        
+        # 신뢰구간 계산 (주요 지표 기준)
+        confidence_interval = self._calculate_confidence_interval(
+            primary_count, total_users, experiment.confidence_level
+        )
+        
+        return {
+            'total_users': total_users,
+            'events': events_data,
+            'conversion_rate': primary_conversion,
+            'confidence_interval': confidence_interval,
+            'statistical_power': self._calculate_statistical_power(
+                primary_count, total_users
+            )
+        }
+    
+    def _perform_significance_tests(self, experiment: Experiment, 
+                                  variant_stats: Dict[str, Any]) -> Dict[str, Any]:
+        """통계적 유의성 검정"""
+        
+        variants = list(variant_stats.keys())
+        
+        if len(variants) < 2:
+            return {'error': 'Need at least 2 variants for comparison'}
+        
+        results = {}
+        
+        # 컨트롤 그룹 (보통 'control' 또는 첫 번째 변형)
+        control_variant = 'control' if 'control' in variants else variants[0]
+        control_stats = variant_stats[control_variant]
+        
+        for variant in variants:
+            if variant == control_variant:
+                continue
+            
+            variant_data = variant_stats[variant]
+            
+            # 비율 차이 검정 (Z-test)
+            z_stat, p_value = self._proportion_z_test(
+                control_stats['events'][experiment.primary_metric]['count'],
+                control_stats['total_users'],
+                variant_data['events'][experiment.primary_metric]['count'],
+                variant_data['total_users']
+            )
+            
+            # 효과 크기 계산
+            effect_size = (
+                variant_data['conversion_rate'] - control_stats['conversion_rate']
+            )
+            
+            # 상대적 개선도
+            relative_improvement = (
+                effect_size / control_stats['conversion_rate'] 
+                if control_stats['conversion_rate'] > 0 else 0
+            )
+            
+            results[f"{control_variant}_vs_{variant}"] = {
+                'z_statistic': float(z_stat),
+                'p_value': float(p_value),
+                'effect_size': float(effect_size),
+                'relative_improvement': float(relative_improvement),
+                'is_significant': p_value < (1 - experiment.confidence_level),
+                'confidence_level': experiment.confidence_level
+            }
+        
+        return results
+    
+    def _proportion_z_test(self, x1: int, n1: int, x2: int, n2: int) -> Tuple[float, float]:
+        """비율 차이에 대한 Z 검정"""
+        
+        if n1 == 0 or n2 == 0:
+            return 0.0, 1.0
+        
+        p1 = x1 / n1
+        p2 = x2 / n2
+        
+        # 합동 비율
+        p_pooled = (x1 + x2) / (n1 + n2)
+        
+        # 표준오차
+        se = np.sqrt(p_pooled * (1 - p_pooled) * (1/n1 + 1/n2))
+        
+        if se == 0:
+            return 0.0, 1.0
+        
+        # Z 통계량
+        z = (p2 - p1) / se
+        
+        # p-값 (양측검정)
+        p_value = 2 * (1 - stats.norm.cdf(abs(z)))
+        
+        return z, p_value
+    
+    def _calculate_confidence_interval(self, successes: int, trials: int, 
+                                     confidence: float) -> Tuple[float, float]:
+        """신뢰구간 계산"""
+        
+        if trials == 0:
+            return (0.0, 0.0)
+        
+        p = successes / trials
+        z_score = stats.norm.ppf(1 - (1 - confidence) / 2)
+        
+        se = np.sqrt(p * (1 - p) / trials)
+        margin_error = z_score * se
+        
+        lower = max(0, p - margin_error)
+        upper = min(1, p + margin_error)
+        
+        return (float(lower), float(upper))
+    
+    def _calculate_statistical_power(self, successes: int, trials: int) -> float:
+        """통계적 검정력 계산"""
+        
+        if trials == 0:
+            return 0.0
+        
+        # 간단한 검정력 추정 (실제로는 더 복잡한 계산 필요)
+        p = successes / trials
+        se = np.sqrt(p * (1 - p) / trials)
+        
+        # 효과 크기 0.05를 감지할 수 있는 검정력 추정
+        effect_size = 0.05
+        power = 1 - stats.norm.cdf(1.96 - effect_size / se)
+        
+        return float(max(0, min(1, power)))
+    
+    def _generate_recommendations(self, experiment: Experiment, 
+                                variant_stats: Dict[str, Any], 
+                                significance_results: Dict[str, Any]) -> List[str]:
+        """실험 결과 기반 권장사항 생성"""
+        
+        recommendations = []
+        
+        # 샘플 크기 확인
+        total_users = sum(stats['total_users'] for stats in variant_stats.values())
+        
+        if total_users < experiment.target_sample_size:
+            recommendations.append(
+                f"Sample size ({total_users}) is below target ({experiment.target_sample_size}). "
+                "Consider extending the experiment duration."
+            )
+        
+        # 유의성 검정 결과 확인
+        significant_results = [
+            result for result in significance_results.values()
+            if isinstance(result, dict) and result.get('is_significant', False)
+        ]
+        
+        if significant_results:
+            best_result = max(significant_results, key=lambda x: x['relative_improvement'])
+            recommendations.append(
+                f"Significant improvement found: {best_result['relative_improvement']:.2%} "
+                f"relative improvement with p-value {best_result['p_value']:.4f}"
+            )
+        else:
+            recommendations.append(
+                "No statistically significant differences found. "
+                "Consider testing with larger effect sizes or longer duration."
+            )
+        
+        # 검정력 확인
+        low_power_variants = [
+            variant for variant, stats in variant_stats.items()
+            if stats['statistical_power'] < 0.8
+        ]
+        
+        if low_power_variants:
+            recommendations.append(
+                f"Low statistical power detected for variants: {', '.join(low_power_variants)}. "
+                "Consider increasing sample size."
+            )
+        
+        return recommendations
+
+# A/B 테스트 매니저 인스턴스
+ab_test_manager = ABTestManager()
+```
+
+### 7.2 성능 분석 및 최적화
+
+```python
+# apps/recommendations/performance_analyzer.py
+import time
+import logging
+import numpy as np
+import pandas as pd
+from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime, timedelta
+from django.db.models import Avg, Count, Q, F
+from django.utils import timezone
+from django.core.cache import cache
+from apps.recommendations.models import (
+    RecommendationRequest, RecommendationResult, 
+    UserInteraction, ExperimentEvent
+)
+import matplotlib.pyplot as plt
+import seaborn as sns
+from io import BytesIO
+import base64
+
+logger = logging.getLogger(__name__)
+
+class PerformanceAnalyzer:
+    """추천 시스템 성능 분석기"""
+    
+    def __init__(self):
+        self.cache_prefix = "perf_analysis_"
+        self.cache_timeout = 3600  # 1시간
+    
+    def analyze_recommendation_performance(self, days: int = 30) -> Dict[str, Any]:
+        """추천 성능 종합 분석"""
+        
+        cache_key = f"{self.cache_prefix}recommendation_perf_{days}"
+        cached_result = cache.get(cache_key)
+        
+        if cached_result:
+            return cached_result
+        
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=days)
+        
+        analysis_result = {
+            'period': {
+                'start_date': start_date.isoformat(),
+                'end_date': end_date.isoformat(),
+                'days': days
+            },
+            'overall_metrics': self._calculate_overall_metrics(start_date, end_date),
+            'algorithm_comparison': self._compare_algorithm_performance(start_date, end_date),
+            'response_time_analysis': self._analyze_response_times(start_date, end_date),
+            'user_engagement_metrics': self._calculate_engagement_metrics(start_date, end_date),
+            'recommendation_quality': self._assess_recommendation_quality(start_date, end_date),
+            'trends': self._analyze_performance_trends(start_date, end_date)
+        }
+        
+        cache.set(cache_key, analysis_result, self.cache_timeout)
+        return analysis_result
+    
+    def _calculate_overall_metrics(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """전체 성능 지표 계산"""
+        
+        # 추천 요청 통계
+        total_requests = RecommendationRequest.objects.filter(
+            created__range=[start_date, end_date]
+        ).count()
+        
+        # 평균 응답 시간
+        avg_response_time = RecommendationRequest.objects.filter(
+            created__range=[start_date, end_date]
+        ).aggregate(avg_time=Avg('response_time_ms'))['avg_time'] or 0
+        
+        # 성공률 (에러가 없는 요청 비율)
+        successful_requests = RecommendationRequest.objects.filter(
+            created__range=[start_date, end_date],
+            num_returned__gt=0
+        ).count()
+        
+        success_rate = successful_requests / total_requests if total_requests > 0 else 0
+        
+        # 캐시 히트율 (추정)
+        cache_hits = RecommendationRequest.objects.filter(
+            created__range=[start_date, end_date],
+            response_time_ms__lt=50  # 50ms 미만을 캐시 히트로 추정
+        ).count()
+        
+        cache_hit_rate = cache_hits / total_requests if total_requests > 0 else 0
+        
+        # 사용자 참여도
+        total_interactions = UserInteraction.objects.filter(
+            created__range=[start_date, end_date]
+        ).count()
+        
+        unique_users = UserInteraction.objects.filter(
+            created__range=[start_date, end_date]
+        ).values('user_id').distinct().count()
+        
+        return {
+            'total_requests': total_requests,
+            'avg_response_time_ms': float(avg_response_time),
+            'success_rate': float(success_rate),
+            'cache_hit_rate': float(cache_hit_rate),
+            'total_interactions': total_interactions,
+            'unique_active_users': unique_users,
+            'avg_interactions_per_user': float(total_interactions / unique_users) if unique_users > 0 else 0
+        }
+    
+    def _compare_algorithm_performance(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """알고리즘별 성능 비교"""
+        
+        # 알고리즘별 요청 수 및 응답 시간
+        algorithm_stats = {}
+        
+        # RecommendationRequest에 algorithm 필드가 있다고 가정
+        requests_by_algorithm = RecommendationRequest.objects.filter(
+            created__range=[start_date, end_date]
+        ).values('algorithm__name').annotate(
+            count=Count('id'),
+            avg_response_time=Avg('response_time_ms'),
+            avg_results=Avg('num_returned')
+        )
+        
+        for stat in requests_by_algorithm:
+            algorithm_name = stat['algorithm__name'] or 'unknown'
+            
+            # 해당 알고리즘으로 생성된 추천의 상호작용율 계산
+            algorithm_interactions = self._calculate_algorithm_engagement(
+                algorithm_name, start_date, end_date
+            )
+            
+            algorithm_stats[algorithm_name] = {
+                'request_count': stat['count'],
+                'avg_response_time_ms': float(stat['avg_response_time'] or 0),
+                'avg_results_returned': float(stat['avg_results'] or 0),
+                'engagement_metrics': algorithm_interactions
+            }
+        
+        return algorithm_stats
+    
+    def _calculate_algorithm_engagement(self, algorithm: str, start_date: datetime, 
+                                     end_date: datetime) -> Dict[str, float]:
+        """알고리즘별 사용자 참여도 계산"""
+        
+        # 해당 알고리즘으로 추천받은 상품들의 상호작용 분석
+        # 실제 구현에서는 추천 결과와 상호작용을 연결하는 로직 필요
+        
+        return {
+            'click_through_rate': 0.0,  # 실제 계산 필요
+            'conversion_rate': 0.0,     # 실제 계산 필요
+            'engagement_score': 0.0     # 종합 참여도 점수
+        }
+    
+    def _analyze_response_times(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """응답 시간 분석"""
+        
+        response_times = list(
+            RecommendationRequest.objects.filter(
+                created__range=[start_date, end_date]
+            ).values_list('response_time_ms', flat=True)
+        )
+        
+        if not response_times:
+            return {'error': 'No data available'}
+        
+        np_times = np.array(response_times)
+        
+        return {
+            'mean': float(np.mean(np_times)),
+            'median': float(np.median(np_times)),
+            'std': float(np.std(np_times)),
+            'min': float(np.min(np_times)),
+            'max': float(np.max(np_times)),
+            'percentiles': {
+                'p50': float(np.percentile(np_times, 50)),
+                'p90': float(np.percentile(np_times, 90)),
+                'p95': float(np.percentile(np_times, 95)),
+                'p99': float(np.percentile(np_times, 99))
+            },
+            'sla_compliance': {
+                'under_100ms': float(np.sum(np_times < 100) / len(np_times)),
+                'under_500ms': float(np.sum(np_times < 500) / len(np_times)),
+                'under_1000ms': float(np.sum(np_times < 1000) / len(np_times))
+            }
+        }
+    
+    def _calculate_engagement_metrics(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """사용자 참여도 지표 계산"""
+        
+        # 상호작용 유형별 통계
+        interaction_stats = UserInteraction.objects.filter(
+            created__range=[start_date, end_date]
+        ).values('interaction_type').annotate(
+            count=Count('id')
+        )
+        
+        # 일일 활성 사용자
+        daily_active_users = []
+        current_date = start_date.date()
+        end_date_date = end_date.date()
+        
+        while current_date <= end_date_date:
+            day_start = timezone.make_aware(datetime.combine(current_date, datetime.min.time()))
+            day_end = day_start + timedelta(days=1)
+            
+            dau = UserInteraction.objects.filter(
+                created__range=[day_start, day_end]
+            ).values('user_id').distinct().count()
+            
+            daily_active_users.append({
+                'date': current_date.isoformat(),
+                'active_users': dau
+            })
+            
+            current_date += timedelta(days=1)
+        
+        # 사용자 세션 분석
+        session_metrics = self._analyze_user_sessions(start_date, end_date)
+        
+        return {
+            'interaction_breakdown': {
+                stat['interaction_type']: stat['count'] 
+                for stat in interaction_stats
+            },
+            'daily_active_users': daily_active_users,
+            'session_metrics': session_metrics
+        }
+    
+    def _analyze_user_sessions(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """사용자 세션 분석"""
+        
+        # 사용자별 세션 길이 및 상호작용 수 분석
+        user_sessions = UserInteraction.objects.filter(
+            created__range=[start_date, end_date]
+        ).values('user_id').annotate(
+            total_interactions=Count('id'),
+            session_duration=F('created__max') - F('created__min')
+        )
+        
+        if not user_sessions:
+            return {}
+        
+        # 세션당 상호작용 수 분포
+        interactions_per_session = [session['total_interactions'] for session in user_sessions]
+        
+        return {
+            'avg_interactions_per_session': float(np.mean(interactions_per_session)),
+            'median_interactions_per_session': float(np.median(interactions_per_session)),
+            'sessions_with_multiple_interactions': len([x for x in interactions_per_session if x > 1])
+        }
+    
+    def _assess_recommendation_quality(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """추천 품질 평가"""
+        
+        # 추천 다양성 분석
+        diversity_metrics = self._calculate_recommendation_diversity(start_date, end_date)
+        
+        # 커버리지 분석
+        coverage_metrics = self._calculate_catalog_coverage(start_date, end_date)
+        
+        # 신규성 분석
+        novelty_metrics = self._calculate_recommendation_novelty(start_date, end_date)
+        
+        return {
+            'diversity': diversity_metrics,
+            'coverage': coverage_metrics,
+            'novelty': novelty_metrics
+        }
+    
+    def _calculate_recommendation_diversity(self, start_date: datetime, end_date: datetime) -> Dict[str, float]:
+        """추천 다양성 계산"""
+        
+        # 추천된 상품들의 카테고리/브랜드 분포 분석
+        recommendations = RecommendationResult.objects.filter(
+            request__created__range=[start_date, end_date]
+        ).select_related('product')
+        
+        if not recommendations:
+            return {'category_diversity': 0.0, 'brand_diversity': 0.0}
+        
+        # 카테고리 분포
+        categories = [rec.product.category_id for rec in recommendations if rec.product.category_id]
+        category_diversity = len(set(categories)) / len(categories) if categories else 0
+        
+        # 브랜드 분포
+        brands = [rec.product.brand_id for rec in recommendations if rec.product.brand_id]
+        brand_diversity = len(set(brands)) / len(brands) if brands else 0
+        
+        return {
+            'category_diversity': float(category_diversity),
+            'brand_diversity': float(brand_diversity)
+        }
+    
+    def _calculate_catalog_coverage(self, start_date: datetime, end_date: datetime) -> Dict[str, float]:
+        """카탈로그 커버리지 계산"""
+        
+        from apps.products.models import Product
+        
+        # 전체 활성 상품 수
+        total_active_products = Product.objects.filter(is_active=True).count()
+        
+        # 추천된 고유 상품 수
+        recommended_products = RecommendationResult.objects.filter(
+            request__created__range=[start_date, end_date]
+        ).values('product_id').distinct().count()
+        
+        coverage = recommended_products / total_active_products if total_active_products > 0 else 0
+        
+        return {
+            'total_products': total_active_products,
+            'recommended_products': recommended_products,
+            'coverage_rate': float(coverage)
+        }
+    
+    def _calculate_recommendation_novelty(self, start_date: datetime, end_date: datetime) -> Dict[str, float]:
+        """추천 신규성 계산"""
+        
+        # 인기도가 낮은 상품들이 얼마나 추천되었는지 분석
+        recommendations = RecommendationResult.objects.filter(
+            request__created__range=[start_date, end_date]
+        ).select_related('product')
+        
+        if not recommendations:
+            return {'novelty_score': 0.0}
+        
+        # 상품 인기도 역수의 평균으로 신규성 점수 계산
+        novelty_scores = []
+        for rec in recommendations:
+            product = rec.product
+            popularity = max(product.view_count, 1)  # 0으로 나누기 방지
+            novelty_score = 1.0 / popularity
+            novelty_scores.append(novelty_score)
+        
+        avg_novelty = np.mean(novelty_scores) if novelty_scores else 0
+        
+        return {
+            'novelty_score': float(avg_novelty),
+            'long_tail_percentage': float(len([s for s in novelty_scores if s > 0.001]) / len(novelty_scores))
+        }
+    
+    def _analyze_performance_trends(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """성능 트렌드 분석"""
+        
+        # 일별 성능 지표 추이
+        daily_metrics = []
+        current_date = start_date.date()
+        end_date_date = end_date.date()
+        
+        while current_date <= end_date_date:
+            day_start = timezone.make_aware(datetime.combine(current_date, datetime.min.time()))
+            day_end = day_start + timedelta(days=1)
+            
+            day_requests = RecommendationRequest.objects.filter(
+                created__range=[day_start, day_end]
+            )
+            
+            day_interactions = UserInteraction.objects.filter(
+                created__range=[day_start, day_end]
+            )
+            
+            daily_metric = {
+                'date': current_date.isoformat(),
+                'requests_count': day_requests.count(),
+                'avg_response_time': day_requests.aggregate(
+                    avg=Avg('response_time_ms')
+                )['avg'] or 0,
+                'interactions_count': day_interactions.count(),
+                'unique_users': day_interactions.values('user_id').distinct().count()
+            }
+            
+            daily_metrics.append(daily_metric)
+            current_date += timedelta(days=1)
+        
+        return {
+            'daily_metrics': daily_metrics,
+            'trend_analysis': self._calculate_trends(daily_metrics)
+        }
+    
+    def _calculate_trends(self, daily_metrics: List[Dict]) -> Dict[str, str]:
+        """트렌드 방향 계산"""
+        
+        if len(daily_metrics) < 2:
+            return {}
+        
+        # 간단한 트렌드 분석 (첫 번째와 마지막 비교)
+        first_day = daily_metrics[0]
+        last_day = daily_metrics[-1]
+        
+        trends = {}
+        
+        for metric in ['requests_count', 'avg_response_time', 'interactions_count', 'unique_users']:
+            first_value = first_day.get(metric, 0)
+            last_value = last_day.get(metric, 0)
+            
+            if first_value == 0:
+                trends[metric] = 'stable'
+            else:
+                change_percent = ((last_value - first_value) / first_value) * 100
+                
+                if change_percent > 5:
+                    trends[metric] = 'increasing'
+                elif change_percent < -5:
+                    trends[metric] = 'decreasing'
+                else:
+                    trends[metric] = 'stable'
+        
+        return trends
+    
+    def generate_performance_report(self, days: int = 30) -> str:
+        """성능 리포트 생성"""
+        
+        analysis = self.analyze_recommendation_performance(days)
+        
+        report_lines = [
+            f"# Recommendation System Performance Report",
+            f"**Analysis Period:** {analysis['period']['start_date'][:10]} to {analysis['period']['end_date'][:10]}",
+            "",
+            "## Overall Metrics",
+            f"- Total Requests: {analysis['overall_metrics']['total_requests']:,}",
+            f"- Average Response Time: {analysis['overall_metrics']['avg_response_time_ms']:.2f}ms",
+            f"- Success Rate: {analysis['overall_metrics']['success_rate']:.2%}",
+            f"- Cache Hit Rate: {analysis['overall_metrics']['cache_hit_rate']:.2%}",
+            f"- Unique Active Users: {analysis['overall_metrics']['unique_active_users']:,}",
+            "",
+            "## Response Time Analysis",
+        ]
+        
+        rt_analysis = analysis['response_time_analysis']
+        if 'error' not in rt_analysis:
+            report_lines.extend([
+                f"- Median: {rt_analysis['median']:.2f}ms",
+                f"- 95th Percentile: {rt_analysis['percentiles']['p95']:.2f}ms",
+                f"- 99th Percentile: {rt_analysis['percentiles']['p99']:.2f}ms",
+                f"- SLA Compliance (<500ms): {rt_analysis['sla_compliance']['under_500ms']:.2%}",
+            ])
+        
+        report_lines.extend([
+            "",
+            "## Quality Metrics",
+            f"- Catalog Coverage: {analysis['recommendation_quality']['coverage']['coverage_rate']:.2%}",
+            f"- Category Diversity: {analysis['recommendation_quality']['diversity']['category_diversity']:.2%}",
+            f"- Brand Diversity: {analysis['recommendation_quality']['diversity']['brand_diversity']:.2%}",
+        ])
+        
+        return "\n".join(report_lines)
+
+# 성능 분석기 인스턴스
+performance_analyzer = PerformanceAnalyzer()
+```
+
+### 7.3 실시간 모니터링 대시보드
+
+```python
+# apps/recommendations/dashboard.py
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils import timezone
+from datetime import timedelta
+import json
+from apps.recommendations.performance_analyzer import performance_analyzer
+from apps.recommendations.ab_testing import ab_test_manager
+from apps.recommendations.monitoring import metrics
+
+class RecommendationDashboardView(View):
+    """추천 시스템 대시보드"""
+    
+    @method_decorator(staff_member_required)
+    def get(self, request):
+        """대시보드 페이지 렌더링"""
+        
+        # 기본 컨텍스트
+        context = {
+            'title': 'Recommendation System Dashboard',
+            'current_time': timezone.now(),
+            'refresh_interval': 30000  # 30초마다 자동 새로고침
+        }
+        
+        return render(request, 'recommendations/dashboard.html', context)
+
+class DashboardAPIView(View):
+    """대시보드 API 엔드포인트"""
+    
+    @method_decorator(cache_page(60))  # 1분 캐시
+    def get(self, request):
+        """실시간 메트릭 데이터 제공"""
+        
+        try:
+            # 시간 범위 파라미터
+            hours = int(request.GET.get('hours', 24))
+            
+            # 실시간 성능 분석
+            performance_data = performance_analyzer.analyze_recommendation_performance(hours // 24)
+            
+            # A/B 테스트 현황
+            ab_test_data = self._get_active_experiments()
+            
+            # 시스템 상태
+            system_health = metrics.metrics.get_performance_summary(hours)
+            
+            # 알림 및 경고
+            alerts = self._generate_alerts(performance_data)
+            
+            dashboard_data = {
+                'timestamp': timezone.now().isoformat(),
+                'performance': performance_data,
+                'ab_tests': ab_test_data,
+                'system_health': system_health,
+                'alerts': alerts,
+                'real_time_metrics': self._get_real_time_metrics()
+            }
+            
+            return JsonResponse(dashboard_data)
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': str(e),
+                'timestamp': timezone.now().isoformat()
+            }, status=500)
+    
+    def _get_active_experiments(self):
+        """활성 A/B 테스트 조회"""
+        
+        from apps.recommendations.models import Experiment, ExperimentStatus
+        
+        active_experiments = Experiment.objects.filter(
+            status=ExperimentStatus.ACTIVE,
+            start_date__lte=timezone.now(),
+            end_date__gte=timezone.now()
+        )
+        
+        experiments_data = []
+        
+        for experiment in active_experiments:
+            # 실험 분석
+            analysis = ab_test_manager.analyze_experiment(experiment.id)
+            
+            experiments_data.append({
+                'id': experiment.id,
+                'name': experiment.name,
+                'type': experiment.experiment_type,
+                'start_date': experiment.start_date.isoformat(),
+                'end_date': experiment.end_date.isoformat(),
+                'progress': self._calculate_experiment_progress(experiment),
+                'preliminary_results': analysis.get('significance_tests', {}),
+                'sample_size': sum(
+                    stats.get('total_users', 0) 
+                    for stats in analysis.get('variant_statistics', {}).values()
+                )
+            })
+        
+        return experiments_data
+    
+    def _calculate_experiment_progress(self, experiment):
+        """실험 진행률 계산"""
+        
+        now = timezone.now()
+        total_duration = experiment.end_date - experiment.start_date
+        elapsed_duration = now - experiment.start_date
+        
+        if elapsed_duration.total_seconds() <= 0:
+            return 0.0
+        
+        progress = elapsed_duration.total_seconds() / total_duration.total_seconds()
+        return min(100.0, max(0.0, progress * 100))
+    
+    def _generate_alerts(self, performance_data):
+        """성능 기반 알림 생성"""
+        
+        alerts = []
+        
+        # 응답 시간 알림
+        if 'response_time_analysis' in performance_data:
+            rt_data = performance_data['response_time_analysis']
+            if 'percentiles' in rt_data:
+                p95_time = rt_data['percentiles']['p95']
+                if p95_time > 1000:  # 1초 초과
+                    alerts.append({
+                        'level': 'error',
+                        'message': f'High response time: P95 = {p95_time:.0f}ms',
+                        'metric': 'response_time',
+                        'value': p95_time,
+                        'threshold': 1000
+                    })
+                elif p95_time > 500:  # 500ms 초과
+                    alerts.append({
+                        'level': 'warning',
+                        'message': f'Elevated response time: P95 = {p95_time:.0f}ms',
+                        'metric': 'response_time',
+                        'value': p95_time,
+                        'threshold': 500
+                    })
+        
+        # 성공률 알림
+        if 'overall_metrics' in performance_data:
+            overall = performance_data['overall_metrics']
+            success_rate = overall.get('success_rate', 1.0)
+            
+            if success_rate < 0.95:  # 95% 미만
+                alerts.append({
+                    'level': 'error' if success_rate < 0.90 else 'warning',
+                    'message': f'Low success rate: {success_rate:.1%}',
+                    'metric': 'success_rate',
+                    'value': success_rate,
+                    'threshold': 0.95
+                })
+        
+        # 추천 품질 알림
+        if 'recommendation_quality' in performance_data:
+            quality = performance_data['recommendation_quality']
+            coverage = quality.get('coverage', {}).get('coverage_rate', 0)
+            
+            if coverage < 0.1:  # 10% 미만 커버리지
+                alerts.append({
+                    'level': 'warning',
+                    'message': f'Low catalog coverage: {coverage:.1%}',
+                    'metric': 'coverage',
+                    'value': coverage,
+                    'threshold': 0.1
+                })
+        
+        return alerts
+    
+    def _get_real_time_metrics(self):
+        """실시간 메트릭 조회"""
+        
+        from django.core.cache import cache
+        from apps.recommendations.models import RecommendationRequest
+        
+        # 최근 5분간의 메트릭
+        five_minutes_ago = timezone.now() - timedelta(minutes=5)
+        
+        recent_requests = RecommendationRequest.objects.filter(
+            created__gte=five_minutes_ago
+        )
+        
+        return {
+            'requests_last_5min': recent_requests.count(),
+            'avg_response_time_5min': recent_requests.aggregate(
+                avg=models.Avg('response_time_ms')
+            )['avg'] or 0,
+            'cache_status': self._check_cache_status(),
+            'active_sessions': self._estimate_active_sessions()
+        }
+    
+    def _check_cache_status(self):
+        """캐시 상태 확인"""
+        
+        try:
+            from django.core.cache import cache
+            
+            # 테스트 키로 캐시 상태 확인
+            test_key = f"cache_health_check_{timezone.now().timestamp()}"
+            cache.set(test_key, "ok", 10)
+            
+            if cache.get(test_key) == "ok":
+                cache.delete(test_key)
+                return "healthy"
+            else:
+                return "unhealthy"
+                
+        except Exception:
+            return "error"
+    
+    def _estimate_active_sessions(self):
+        """활성 세션 수 추정"""
+        
+        # 최근 30분간 활동한 고유 사용자 수로 추정
+        thirty_minutes_ago = timezone.now() - timedelta(minutes=30)
+        
+        from apps.recommendations.models import UserInteraction
+        
+        active_users = UserInteraction.objects.filter(
+            created__gte=thirty_minutes_ago
+        ).values('user_id').distinct().count()
+        
+        return active_users
+
+# URL 설정
+# urls.py
+from django.urls import path
+from .dashboard import RecommendationDashboardView, DashboardAPIView
+
+urlpatterns = [
+    path('dashboard/', RecommendationDashboardView.as_view(), name='recommendation_dashboard'),
+    path('dashboard/api/', DashboardAPIView.as_view(), name='dashboard_api'),
+]
+```
+
+---
+
+## 🚀 8. 배포 및 운영 가이드
+
+프로덕션 환경에서의 안정적인 추천 시스템 배포와 운영을 위한 종합 가이드입니다.
+
+### 8.1 Docker 컨테이너화
+
+```dockerfile
+# Dockerfile
+FROM python:3.11-slim
+
+# 시스템 패키지 설치
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libc6-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# Python 의존성 설치
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 애플리케이션 코드 복사
+COPY . .
+
+# 정적 파일 수집
+RUN python manage.py collectstatic --noinput
+
+# 포트 노출
+EXPOSE 8000
+
+# 헬스체크 설정
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/recommendations/health || exit 1
+
+# 애플리케이션 실행
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "config.wsgi:application"]
+```
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://postgres:password@db:5432/recommendations
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=recommendations
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db_init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  celery:
+    build: .
+    command: celery -A config worker -l info
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/recommendations
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  celery-beat:
+    build: .
+    command: celery -A config beat -l info
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/recommendations
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/ssl/certs
+      - ./media:/app/media
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+```nginx
+# nginx.conf
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream app {
+        server app:8000;
+    }
+
+    # Rate limiting
+    limit_req_zone $binary_remote_addr zone=api:10m rate=100r/m;
+    limit_req_zone $binary_remote_addr zone=recommendations:10m rate=30r/m;
+
+    server {
+        listen 80;
+        server_name localhost;
+        
+        # Redirect to HTTPS in production
+        # return 301 https://$server_name$request_uri;
+
+        client_max_body_size 10M;
+        
+        # Static files
+        location /static/ {
+            alias /app/static/;
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+        
+        location /media/ {
+            alias /app/media/;
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # Health check (no rate limiting)
+        location /recommendations/health {
+            proxy_pass http://app;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        # API endpoints with rate limiting
+        location /api/ {
+            limit_req zone=api burst=20 nodelay;
+            
+            proxy_pass http://app;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            # Timeout settings
+            proxy_connect_timeout 5s;
+            proxy_send_timeout 10s;
+            proxy_read_timeout 30s;
+        }
+
+        # Recommendation endpoints with stricter rate limiting
+        location /recommendations/ {
+            limit_req zone=recommendations burst=10 nodelay;
+            
+            proxy_pass http://app;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # WebSocket proxy for real-time recommendations
+        location /ws/ {
+            proxy_pass http://app;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        # Default proxy
+        location / {
+            proxy_pass http://app;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}
+```
+
+### 8.2 Kubernetes 배포
+
+```yaml
+# k8s/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: recommendation-system
+
+---
+# k8s/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: recommendation-system
+data:
+  DEBUG: "False"
+  ALLOWED_HOSTS: "*"
+  DATABASE_HOST: "postgresql"
+  REDIS_HOST: "redis"
+
+---
+# k8s/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: recommendation-system
+type: Opaque
+data:
+  SECRET_KEY: <base64-encoded-secret-key>
+  DATABASE_PASSWORD: <base64-encoded-db-password>
+
+---
+# k8s/postgresql.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql
+  namespace: recommendation-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: postgres:15
+        env:
+        - name: POSTGRES_DB
+          value: recommendations
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DATABASE_PASSWORD
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  namespace: recommendation-system
+spec:
+  selector:
+    app: postgresql
+  ports:
+  - port: 5432
+    targetPort: 5432
+
+---
+# k8s/redis.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: recommendation-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: recommendation-system
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+# k8s/app.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation-app
+  namespace: recommendation-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: recommendation-app
+  template:
+    metadata:
+      labels:
+        app: recommendation-app
+    spec:
+      containers:
+      - name: app
+        image: recommendation-system:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: SECRET_KEY
+        - name: DATABASE_URL
+          value: "postgresql://postgres:$(DATABASE_PASSWORD)@postgresql:5432/recommendations"
+        - name: REDIS_URL
+          value: "redis://redis:6379/0"
+        envFrom:
+        - configMapRef:
+            name: app-config
+        livenessProbe:
+          httpGet:
+            path: /recommendations/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /recommendations/health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendation-app-service
+  namespace: recommendation-system
+spec:
+  selector:
+    app: recommendation-app
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: ClusterIP
+
+---
+# k8s/celery.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  namespace: recommendation-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: celery-worker
+  template:
+    metadata:
+      labels:
+        app: celery-worker
+    spec:
+      containers:
+      - name: celery-worker
+        image: recommendation-system:latest
+        command: ["celery", "-A", "config", "worker", "-l", "info"]
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:$(DATABASE_PASSWORD)@postgresql:5432/recommendations"
+        - name: CELERY_BROKER_URL
+          value: "redis://redis:6379/1"
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretKeyRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+
+---
+# k8s/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: recommendation-ingress
+  namespace: recommendation-system
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  rules:
+  - host: recommendations.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: recommendation-app-service
+            port:
+              number: 80
+
+---
+# k8s/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: recommendation-app-hpa
+  namespace: recommendation-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: recommendation-app
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+### 8.3 모니터링 및 로깅
+
+```python
+# monitoring/prometheus.py
+import time
+import logging
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+from django.http import HttpResponse
+from django.views import View
+from functools import wraps
+
+# Prometheus 메트릭 정의
+RECOMMENDATION_REQUESTS = Counter(
+    'recommendation_requests_total',
+    'Total recommendation requests',
+    ['algorithm', 'status']
+)
+
+RECOMMENDATION_DURATION = Histogram(
+    'recommendation_duration_seconds',
+    'Time spent processing recommendations',
+    ['algorithm']
+)
+
+ACTIVE_USERS = Gauge(
+    'active_users_current',
+    'Current number of active users'
+)
+
+CACHE_HIT_RATE = Gauge(
+    'cache_hit_rate',
+    'Current cache hit rate'
+)
+
+AB_TEST_ASSIGNMENTS = Counter(
+    'ab_test_assignments_total',
+    'Total A/B test assignments',
+    ['experiment', 'variant']
+)
+
+logger = logging.getLogger(__name__)
+
+def track_recommendations(algorithm_name: str):
+    """추천 메트릭 추적 데코레이터"""
+    
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            status = 'success'
+            
+            try:
+                result = func(*args, **kwargs)
+                return result
+            except Exception as e:
+                status = 'error'
+                raise
+            finally:
+                duration = time.time() - start_time
+                
+                RECOMMENDATION_REQUESTS.labels(
+                    algorithm=algorithm_name, 
+                    status=status
+                ).inc()
+                
+                RECOMMENDATION_DURATION.labels(
+                    algorithm=algorithm_name
+                ).observe(duration)
+        
+        return wrapper
+    return decorator
+
+class PrometheusMetricsView(View):
+    """Prometheus 메트릭 엔드포인트"""
+    
+    def get(self, request):
+        """메트릭 데이터 반환"""
+        
+        # 실시간 메트릭 업데이트
+        self._update_real_time_metrics()
+        
+        # Prometheus 형식으로 메트릭 생성
+        metrics_data = generate_latest()
+        
+        return HttpResponse(
+            metrics_data,
+            content_type=CONTENT_TYPE_LATEST
+        )
+    
+    def _update_real_time_metrics(self):
+        """실시간 메트릭 업데이트"""
+        
+        try:
+            from django.utils import timezone
+            from datetime import timedelta
+            from apps.recommendations.models import UserInteraction
+            
+            # 활성 사용자 수 (최근 30분)
+            thirty_minutes_ago = timezone.now() - timedelta(minutes=30)
+            active_users_count = UserInteraction.objects.filter(
+                created__gte=thirty_minutes_ago
+            ).values('user_id').distinct().count()
+            
+            ACTIVE_USERS.set(active_users_count)
+            
+            # 캐시 히트율 계산
+            from django.core.cache import cache
+            cache_stats = self._calculate_cache_hit_rate()
+            CACHE_HIT_RATE.set(cache_stats)
+            
+        except Exception as e:
+            logger.error(f"Error updating real-time metrics: {str(e)}")
+    
+    def _calculate_cache_hit_rate(self) -> float:
+        """캐시 히트율 계산"""
+        
+        # 실제 구현에서는 Redis INFO 명령이나 캐시 통계 사용
+        # 여기서는 간단한 예시
+        try:
+            from django.core.cache import cache
+            
+            # 테스트 키들로 캐시 상태 확인
+            test_keys = [f"cache_test_{i}" for i in range(10)]
+            hits = 0
+            
+            for key in test_keys:
+                cache.set(key, "test", 60)
+                if cache.get(key) == "test":
+                    hits += 1
+                cache.delete(key)
+            
+            return hits / len(test_keys)
+            
+        except Exception:
+            return 0.0
+```
+
+```yaml
+# monitoring/grafana-dashboard.json
+{
+  "dashboard": {
+    "id": null,
+    "title": "Recommendation System Dashboard",
+    "tags": ["recommendations", "ml"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Recommendation Requests Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(recommendation_requests_total[5m])",
+            "legendFormat": "{{algorithm}} - {{status}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Response Time Percentiles",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(recommendation_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.90, rate(recommendation_duration_seconds_bucket[5m]))",
+            "legendFormat": "90th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(recommendation_duration_seconds_bucket[5m]))",
+            "legendFormat": "99th percentile"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Active Users",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "active_users_current"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Cache Hit Rate",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "cache_hit_rate * 100"
+          }
+        ],
+        "postfix": "%"
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}
+```
+
+### 8.4 CI/CD 파이프라인
+
+```yaml
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/recommendation-system
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_recommendations
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Run linting
+      run: |
+        flake8 apps/
+        black --check apps/
+        isort --check-only apps/
+    
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_recommendations
+        REDIS_URL: redis://localhost:6379/0
+        SECRET_KEY: test-secret-key
+      run: |
+        python manage.py test
+        
+    - name: Run security checks
+      run: |
+        bandit -r apps/
+        safety check
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+    
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+    
+    - name: Deploy to Kubernetes
+      env:
+        KUBECONFIG: kubeconfig
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Update image tag in deployment
+        sed -i "s|recommendation-system:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|g" k8s/app.yaml
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f k8s/
+        
+        # Wait for deployment to complete
+        kubectl rollout status deployment/recommendation-app -n recommendation-system
+    
+    - name: Run post-deployment tests
+      env:
+        KUBECONFIG: kubeconfig
+      run: |
+        # Health check
+        kubectl exec -n recommendation-system deployment/recommendation-app -- curl -f http://localhost:8000/recommendations/health
+        
+        # Basic API test
+        APP_URL=$(kubectl get ingress recommendation-ingress -n recommendation-system -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        curl -f http://$APP_URL/recommendations/health
+
+  performance-test:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run load tests
+      run: |
+        # Install k6
+        curl https://github.com/grafana/k6/releases/download/v0.46.0/k6-v0.46.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
+        
+        # Run performance tests
+        ./k6 run --vus 50 --duration 5m performance-tests/load-test.js
+```
+
+```javascript
+// performance-tests/load-test.js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { Rate } from 'k6/metrics';
+
+// 커스텀 메트릭
+export const errorRate = new Rate('errors');
+
+export const options = {
+  stages: [
+    { duration: '2m', target: 10 }, // 워밍업
+    { duration: '5m', target: 50 }, // 정상 부하
+    { duration: '2m', target: 100 }, // 스파이크 테스트
+    { duration: '1m', target: 0 }, // 쿨다운
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<1000'], // 95% of requests under 1s
+    http_req_failed: ['rate<0.1'], // Error rate under 10%
+    errors: ['rate<0.1'],
+  },
+};
+
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:8000';
+
+export default function() {
+  // 헬스 체크
+  let healthResponse = http.get(`${BASE_URL}/recommendations/health`);
+  check(healthResponse, {
+    'health check status is 200': (r) => r.status === 200,
+  });
+
+  // 추천 API 테스트
+  const recommendationPayload = JSON.stringify({
+    num_recommendations: 10,
+    strategy: 'weighted',
+    context: {
+      test_load: true
+    }
+  });
+
+  const params = {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer test-token',
+    },
+  };
+
+  let recommendationResponse = http.post(
+    `${BASE_URL}/api/recommendations`,
+    recommendationPayload,
+    params
+  );
+
+  const success = check(recommendationResponse, {
+    'recommendation status is 200': (r) => r.status === 200,
+    'recommendation response time < 2s': (r) => r.timings.duration < 2000,
+    'has recommendations': (r) => {
+      const body = JSON.parse(r.body);
+      return body.recommendations && body.recommendations.length > 0;
+    },
+  });
+
+  errorRate.add(!success);
+
+  sleep(1);
+}
+```
+
+### 8.5 운영 체크리스트
+
+```python
+# ops/health_checks.py
+from django.core.management.base import BaseCommand
+from django.db import connection
+from django.core.cache import cache
+from apps.recommendations.services import RecommendationService
+from apps.recommendations.models import RecommendationRequest
+from django.utils import timezone
+from datetime import timedelta
+import requests
+import logging
+
+logger = logging.getLogger(__name__)
+
+class Command(BaseCommand):
+    help = 'Run comprehensive health checks for the recommendation system'
+    
+    def add_arguments(self, parser):
+        parser.add_argument('--detailed', action='store_true', help='Run detailed checks')
+        parser.add_argument('--fix', action='store_true', help='Attempt to fix issues')
+    
+    def handle(self, *args, **options):
+        self.detailed = options['detailed']
+        self.fix_issues = options['fix']
+        
+        checks = [
+            ('Database Connection', self.check_database),
+            ('Redis Connection', self.check_redis),
+            ('Recommendation Service', self.check_recommendation_service),
+            ('API Endpoints', self.check_api_endpoints),
+            ('Celery Workers', self.check_celery_workers),
+            ('System Resources', self.check_system_resources),
+            ('Data Quality', self.check_data_quality),
+        ]
+        
+        if self.detailed:
+            checks.extend([
+                ('Model Performance', self.check_model_performance),
+                ('A/B Test Status', self.check_ab_tests),
+                ('Cache Performance', self.check_cache_performance),
+            ])
+        
+        results = []
+        
+        for check_name, check_func in checks:
+            self.stdout.write(f"Running {check_name}...")
+            try:
+                result = check_func()
+                status = "✓ PASS" if result['status'] == 'ok' else "✗ FAIL"
+                self.stdout.write(f"{status}: {result['message']}")
+                results.append((check_name, result))
+            except Exception as e:
+                self.stdout.write(f"✗ ERROR: {str(e)}")
+                results.append((check_name, {'status': 'error', 'message': str(e)}))
+        
+        # 결과 요약
+        passed = sum(1 for _, result in results if result['status'] == 'ok')
+        total = len(results)
+        
+        self.stdout.write(f"\n=== Health Check Summary ===")
+        self.stdout.write(f"Passed: {passed}/{total}")
+        
+        if passed < total:
+            self.stdout.write("Issues detected. Check logs for details.")
+            return 1
+        else:
+            self.stdout.write("All checks passed!")
+            return 0
+    
+    def check_database(self):
+        """데이터베이스 연결 및 상태 확인"""
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                
+            # 최근 데이터 확인
+            recent_requests = RecommendationRequest.objects.filter(
+                created__gte=timezone.now() - timedelta(hours=1)
+            ).count()
+            
+            return {
+                'status': 'ok',
+                'message': f'Database connection OK. Recent requests: {recent_requests}'
+            }
+            
+        except Exception as e:
+            return {'status': 'fail', 'message': f'Database error: {str(e)}'}
+    
+    def check_redis(self):
+        """Redis 연결 및 성능 확인"""
+        try:
+            cache.set('health_check', 'ok', 10)
+            value = cache.get('health_check')
+            
+            if value != 'ok':
+                return {'status': 'fail', 'message': 'Redis cache not working'}
+            
+            # Redis 정보 확인 (선택적)
+            if self.detailed:
+                # Redis 통계 정보 수집
+                pass
+            
+            return {'status': 'ok', 'message': 'Redis connection OK'}
+            
+        except Exception as e:
+            return {'status': 'fail', 'message': f'Redis error: {str(e)}'}
+    
+    def check_recommendation_service(self):
+        """추천 서비스 기능 확인"""
+        try:
+            service = RecommendationService()
+            
+            # 테스트 사용자로 추천 생성
+            test_user_id = 1
+            recommendations = service.get_recommendations(
+                user_id=test_user_id,
+                num_recommendations=5
+            )
+            
+            if not recommendations or len(recommendations.get('recommendations', [])) == 0:
+                return {'status': 'fail', 'message': 'No recommendations generated'}
+            
+            response_time = recommendations.get('response_time_ms', 0)
+            if response_time > 5000:  # 5초 초과
+                return {
+                    'status': 'warn', 
+                    'message': f'Slow response time: {response_time}ms'
+                }
+            
+            return {
+                'status': 'ok',
+                'message': f'Recommendation service OK. Response time: {response_time}ms'
+            }
+            
+        except Exception as e:
+            return {'status': 'fail', 'message': f'Recommendation service error: {str(e)}'}
+    
+    def check_api_endpoints(self):
+        """API 엔드포인트 상태 확인"""
+        try:
+            # 헬스체크 엔드포인트
+            import subprocess
+            result = subprocess.run(
+                ['curl', '-f', 'http://localhost:8000/recommendations/health'],
+                capture_output=True,
+                timeout=10
+            )
+            
+            if result.returncode != 0:
+                return {'status': 'fail', 'message': 'Health endpoint not responding'}
+            
+            return {'status': 'ok', 'message': 'API endpoints responding'}
+            
+        except subprocess.TimeoutExpired:
+            return {'status': 'fail', 'message': 'API endpoint timeout'}
+        except Exception as e:
+            return {'status': 'fail', 'message': f'API check error: {str(e)}'}
+    
+    def check_celery_workers(self):
+        """Celery 워커 상태 확인"""
+        try:
+            from celery import current_app
+            
+            inspect = current_app.control.inspect()
+            stats = inspect.stats()
+            
+            if not stats:
+                return {'status': 'fail', 'message': 'No Celery workers found'}
+            
+            active_workers = len(stats)
+            return {
+                'status': 'ok',
+                'message': f'Celery workers active: {active_workers}'
+            }
+            
+        except Exception as e:
+            return {'status': 'fail', 'message': f'Celery check error: {str(e)}'}
+    
+    def check_system_resources(self):
+        """시스템 리소스 사용량 확인"""
+        try:
+            import psutil
+            
+            # CPU 사용률
+            cpu_percent = psutil.cpu_percent(interval=1)
+            
+            # 메모리 사용률
+            memory = psutil.virtual_memory()
+            memory_percent = memory.percent
+            
+            # 디스크 사용률
+            disk = psutil.disk_usage('/')
+            disk_percent = disk.percent
+            
+            warnings = []
+            
+            if cpu_percent > 80:
+                warnings.append(f'High CPU usage: {cpu_percent}%')
+            
+            if memory_percent > 85:
+                warnings.append(f'High memory usage: {memory_percent}%')
+            
+            if disk_percent > 90:
+                warnings.append(f'High disk usage: {disk_percent}%')
+            
+            if warnings:
+                return {'status': 'warn', 'message': '; '.join(warnings)}
+            
+            return {
+                'status': 'ok',
+                'message': f'Resources OK (CPU: {cpu_percent}%, RAM: {memory_percent}%, Disk: {disk_percent}%)'
+            }
+            
+        except ImportError:
+            return {'status': 'skip', 'message': 'psutil not available'}
+        except Exception as e:
+            return {'status': 'fail', 'message': f'Resource check error: {str(e)}'}
+    
+    def check_data_quality(self):
+        """데이터 품질 확인"""
+        try:
+            from apps.recommendations.models import UserInteraction
+            from apps.products.models import Product
+            
+            # 최근 상호작용 수
+            recent_interactions = UserInteraction.objects.filter(
+                created__gte=timezone.now() - timedelta(days=1)
+            ).count()
+            
+            # 활성 상품 수
+            active_products = Product.objects.filter(is_active=True).count()
+            
+            if recent_interactions == 0:
+                return {'status': 'warn', 'message': 'No recent user interactions'}
+            
+            if active_products == 0:
+                return {'status': 'fail', 'message': 'No active products'}
+            
+            return {
+                'status': 'ok',
+                'message': f'Data OK (Interactions: {recent_interactions}, Products: {active_products})'
+            }
+            
+        except Exception as e:
+            return {'status': 'fail', 'message': f'Data quality check error: {str(e)}'}
+    
+    def check_model_performance(self):
+        """모델 성능 지표 확인"""
+        try:
+            # 최근 24시간 추천 성능 분석
+            from apps.recommendations.performance_analyzer import performance_analyzer
+            
+            analysis = performance_analyzer.analyze_recommendation_performance(1)
+            
+            avg_response_time = analysis['overall_metrics']['avg_response_time_ms']
+            success_rate = analysis['overall_metrics']['success_rate']
+            
+            issues = []
+            
+            if avg_response_time > 1000:
+                issues.append(f'Slow response time: {avg_response_time:.0f}ms')
+            
+            if success_rate < 0.95:
+                issues.append(f'Low success rate: {success_rate:.2%}')
+            
+            if issues:
+                return {'status': 'warn', 'message': '; '.join(issues)}
+            
+            return {
+                'status': 'ok',
+                'message': f'Performance OK (Response: {avg_response_time:.0f}ms, Success: {success_rate:.2%})'
+            }
+            
+        except Exception as e:
+            return {'status': 'fail', 'message': f'Performance check error: {str(e)}'}
+    
+    def check_ab_tests(self):
+        """A/B 테스트 상태 확인"""
+        try:
+            from apps.recommendations.models import Experiment, ExperimentStatus
+            
+            active_experiments = Experiment.objects.filter(
+                status=ExperimentStatus.ACTIVE
+            ).count()
+            
+            return {
+                'status': 'ok',
+                'message': f'A/B tests: {active_experiments} active experiments'
+            }
+            
+        except Exception as e:
+            return {'status': 'fail', 'message': f'A/B test check error: {str(e)}'}
+    
+    def check_cache_performance(self):
+        """캐시 성능 확인"""
+        try:
+            import time
+            
+            # 캐시 응답 시간 측정
+            start_time = time.time()
+            cache.set('perf_test', 'data', 60)
+            cache.get('perf_test')
+            cache_time = (time.time() - start_time) * 1000
+            
+            if cache_time > 100:  # 100ms 초과
+                return {
+                    'status': 'warn',
+                    'message': f'Slow cache response: {cache_time:.2f}ms'
+                }
+            
+            return {
+                'status': 'ok',
+                'message': f'Cache performance OK: {cache_time:.2f}ms'
+            }
+            
+        except Exception as e:
+            return {'status': 'fail', 'message': f'Cache performance check error: {str(e)}'}
+```
+
+---
+
+## 🎯 마무리
+
+이 포스트에서는 Django Ninja를 활용하여 완전한 추천 시스템을 구축하는 전 과정을 다뤘습니다. 협업 필터링부터 콘텐츠 기반 필터링, 하이브리드 시스템, 그리고 프로덕션 배포까지 실무에서 바로 적용할 수 있는 종합적인 솔루션을 제시했습니다.
+
+### 🔍 핵심 포인트
+
+1. **확장 가능한 아키텍처**: 모듈화된 설계로 새로운 알고리즘 추가 용이
+2. **성능 최적화**: 캐싱, 비동기 처리, 백그라운드 작업을 통한 응답 속도 향상
+3. **A/B 테스트**: 데이터 기반 의사결정을 위한 실험 프레임워크
+4. **실시간 처리**: WebSocket을 통한 실시간 추천 업데이트
+5. **프로덕션 준비**: 모니터링, 로깅, CI/CD 파이프라인 구축
+
+### 🚀 추가 학습 방향
+
+- **딥러닝 추천**: TensorFlow/PyTorch를 활용한 신경망 기반 추천
+- **실시간 스트리밍**: Kafka/Kinesis를 이용한 대용량 실시간 데이터 처리
+- **분산 처리**: Spark를 활용한 대규모 데이터 처리
+- **고급 평가 지표**: Precision@K, NDCG, Diversity 등 고급 메트릭 구현
+
+이 추천 시스템은 백엔드 면접에서 기술적 깊이와 실무 경험을 동시에 보여줄 수 있는 완벽한 프로젝트입니다. 각 컴포넌트를 단계적으로 구현하면서 머신러닝, 백엔드 아키텍처, 그리고 DevOps 전반에 대한 이해를 높여보시기 바랍니다.
