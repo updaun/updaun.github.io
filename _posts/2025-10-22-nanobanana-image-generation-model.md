@@ -4,7 +4,7 @@ title: "🍌 나노바나나(NanoBanana) 이미지 생성 모델 완벽 가이�
 date: 2025-10-22 09:00:00 +0900
 categories: [AI, 이미지생성, 머신러닝]
 tags: [NanoBanana, 이미지생성, AI모델, 디퓨전모델, 경량화AI, Stable Diffusion, 텍스트투이미지]
-image: /assets/images/2025-10-22-nanobanana-image-generation-model.webp
+image: "/assets/img/posts/2025-10-22-nanobanana-image-generation-model.webp"
 ---
 
 > **TL;DR**: 나노바나나는 겨우 1GB 미만의 크기로도 놀라운 품질의 이미지를 생성하는 초경량 AI 모델입니다. 개인 PC에서도 빠르게 실행 가능하며, 상업적 이용도 자유롭습니다.

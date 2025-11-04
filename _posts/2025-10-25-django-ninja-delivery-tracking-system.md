@@ -6,7 +6,7 @@ date: 2025-10-25 10:00:00 +0900
 background: '/img/posts/django-ninja-delivery-bg.jpg'
 categories: [Django, API, Logistics]
 tags: [django-ninja, delivery-tracking, smartparcel-api, fastapi, logistics, shipping]
-image: /assets/images/2025-10-25-django-ninja-delivery-tracking-system.webp
+image: "/assets/img/posts/2025-10-25-django-ninja-delivery-tracking-system.webp"
 ---
 
 # 🚚 Django Ninja로 실시간 배송추적 시스템 구축하기

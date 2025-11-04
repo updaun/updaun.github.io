@@ -3,9 +3,7 @@ title: "🛒 Django Ninja로 쇼핑몰 API 구축하기: 기초편"
 date: 2025-10-21 09:00:00 +0900
 categories: [Backend, Django]
 tags: [Django-Ninja, 쇼핑몰, API개발, Python, 전자상거래]
-image:
-  path: /assets/img/posts/2025-10-21-django-ninja-shopping-mall-basic.webp
-  alt: "Django Ninja 쇼핑몰 API 구축 가이드"
+image: "/assets/img/posts/2025-10-21-django-ninja-shopping-mall-basic.webp"
 ---
 
 ## 🎯 Django Ninja로 만드는 현대적 쇼핑몰 API

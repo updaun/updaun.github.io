@@ -4,7 +4,7 @@ title: "🚀 Django Ninja 쇼핑몰 구축 중급편 - 실전 프로덕션 레�
 date: 2025-10-23 09:00:00 +0900
 categories: [Django, API, 쇼핑몰, 중급]
 tags: [Django-Ninja, 쇼핑몰, API, JWT, 결제, 성능최적화, 배포, 실전개발]
-image: /assets/images/2025-10-23-django-ninja-advanced-shopping-mall.webp
+image: "/assets/img/posts/2025-10-23-django-ninja-advanced-shopping-mall.webp"
 ---
 
 > **TL;DR**: Django Ninja로 **실제 프로덕션 환경에서 사용할 수 있는** 고도화된 쇼핑몰 API를 구축합니다. JWT 인증, 실시간 재고 관리, 다중 결제 시스템, 성능 최적화까지 완벽 커버!

@@ -5,6 +5,7 @@ date: 2025-11-03 10:00:00 +0900
 categories: [Django, API, Django-Ninja]
 tags: [Django, Django-Ninja, ModelSchema, PatchDict, API, Pydantic, Schema, PATCH, RESTful]
 description: "Django Ninja의 ModelSchema로 Django 모델에서 자동으로 스키마를 생성하고, PatchDict로 PATCH 요청을 우아하게 처리하는 실무 중심 가이드입니다."
+image: "/assets/img/posts/2025-11-03-django-ninja-modelschema-patchdict-guide.webp"
 ---
 
 # Django Ninja ModelSchema와 PatchDict 완전 활용 가이드

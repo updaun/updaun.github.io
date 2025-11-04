@@ -6,7 +6,7 @@ categories: [Django, ORM, Performance]
 tags: [Django, ORM, select_related, prefetch_related, N+1, SQL, 성능최적화, 데이터베이스]
 description: "Django ORM의 select_related와 prefetch_related의 내부 동작 원리를 SQL 쿼리 레벨에서 분석하고, N+1 문제 해결 방법을 실무 예제와 함께 깊이 있게 탐구합니다."
 author: "updaun"
-image: /assets/images/2025-11-01-django-select-related-prefetch-related-deep-dive.webp
+image: "/assets/img/posts/2025-11-01-django-select-related-prefetch-related-deep-dive.webp"
 ---
 
 # Django ORM의 select_related와 prefetch_related 완전 분석
