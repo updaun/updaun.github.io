@@ -5,6 +5,7 @@ date: 2025-11-05 10:00:00 +0900
 categories: [Python, FastAPI, Django]
 tags: [FastAPI, Django, ORM, SQLAlchemy, Jinja2, Migration, Admin, Authentication, Full-Stack]
 description: "FastAPI를 Django처럼 풀스택 프레임워크로 확장하는 방법을 살펴봅니다. ORM, 템플릿, 마이그레이션, Admin 패널, 인증 시스템까지 Django의 핵심 기능들을 FastAPI에서 구현하는 완전한 가이드입니다."
+image: "/assets/img/posts/2025-11-05-fastapi-like-django-full-stack-framework.webp"
 ---
 
 # FastAPI를 Django처럼 사용하기: Full-Stack 프레임워크로 확장
@@ -590,6 +591,7 @@ async def home(request: Request):
 
 ### 3.2 템플릿 파일 (Django 템플릿과 거의 동일)
 
+{% raw %}
 ```html
 <!-- app/templates/base.html -->
 <!DOCTYPE html>
@@ -636,7 +638,9 @@ async def home(request: Request):
 </body>
 </html>
 ```
+{% endraw %}
 
+{% raw %}
 ```html
 <!-- app/templates/posts/list.html -->
 {% extends "base.html" %}
@@ -692,6 +696,7 @@ async def home(request: Request):
 </div>
 {% endblock %}
 ```
+{% endraw %}
 
 ### 3.3 뷰 함수 (Django views와 유사)
 

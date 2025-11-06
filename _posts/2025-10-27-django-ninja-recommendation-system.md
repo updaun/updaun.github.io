@@ -6113,6 +6113,7 @@ class PrometheusMetricsView(View):
 
 ### 8.4 CI/CD 파이프라인
 
+{% raw %}
 ```yaml
 # .github/workflows/ci-cd.yml
 name: CI/CD Pipeline
@@ -6294,6 +6295,7 @@ jobs:
         # Run performance tests
         ./k6 run --vus 50 --duration 5m performance-tests/load-test.js
 ```
+{% endraw %}
 
 ```javascript
 // performance-tests/load-test.js
