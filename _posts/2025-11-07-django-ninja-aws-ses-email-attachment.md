@@ -5,6 +5,7 @@ date: 2025-11-07 09:00:00 +0900
 categories: [Django, AWS, Backend]
 tags: [django-ninja, aws-ses, email, attachment, api, boto3, mime]
 description: "Django Ninja와 AWS SES를 활용하여 첨부파일을 포함한 이메일 발송 API를 구현하는 완벽 가이드. 실무에서 바로 사용할 수 있는 코드와 함께 보안, 성능 최적화까지 다룹니다."
+image: "/assets/img/posts/2025-11-07-django-ninja-aws-ses-email-attachment.webp"
 ---
 
 ## 1. 서론
