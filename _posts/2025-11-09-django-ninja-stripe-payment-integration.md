@@ -5,6 +5,7 @@ date: 2025-11-09 09:00:00 +0900
 categories: [Django, Payment, Backend]
 tags: [django-ninja, stripe, payment, subscription, webhook, api]
 description: "Django Ninja와 Stripe를 활용하여 글로벌 결제 시스템을 구현하는 완벽 가이드. 일회성 결제부터 정기 구독, 환불 처리, 웹훅까지 실무에서 바로 사용 가능한 코드를 제공합니다."
+image: "/assets/img/posts/2025-11-09-django-ninja-stripe-payment-integration.webp"
 ---
 
 ## 1. 서론
