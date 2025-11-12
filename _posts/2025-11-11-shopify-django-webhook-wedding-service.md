@@ -5,6 +5,7 @@ date: 2025-11-11 09:00:00 +0900
 categories: [Django, E-commerce, Backend]
 tags: [shopify, django, webhook, saas, mobile-wedding-invitation, payment-integration]
 description: "Shopify에서 상품 판매 후 Django 서버로 웹훅을 전송하여 모바일 청첩장 배포 권한을 자동으로 제공하는 SaaS 서비스 구축 완벽 가이드. 실시간 결제 검증부터 라이선스 관리까지."
+image: "/assets/img/posts/2025-11-11-shopify-django-webhook-wedding-service.webp"
 ---
 
 ## 1. 서론
