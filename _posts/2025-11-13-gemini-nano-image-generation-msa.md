@@ -5,6 +5,7 @@ date: 2025-11-13 09:00:00 +0900
 categories: [FastAPI, AI, GCP]
 tags: [fastapi, gemini, google-cloud, image-generation, ai-profile, python, async]
 description: "Express로 작성된 AI 프로필 사진 생성 서비스를 FastAPI로 마이그레이션하며 배우는 실전 백엔드 개발. Google Gemini API 연동부터 GCP 배포까지."
+image: "/assets/img/posts/2025-11-13-gemini-nano-image-generation-msa.webp"
 ---
 
 ## 1. 서론
