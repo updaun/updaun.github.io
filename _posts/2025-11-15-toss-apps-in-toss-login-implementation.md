@@ -5,6 +5,7 @@ date: 2025-11-15 09:00:00 +0900
 categories: [OAuth, Toss, Integration]
 tags: [toss, apps-in-toss, oauth2, login, authentication, sdk, api-integration, react]
 description: "토스 앱인토스 플랫폼의 OAuth 2.0 로그인을 처음부터 끝까지 구현하는 완벽 가이드. 인가 코드 발급부터 사용자 정보 복호화, 로그인 연결 해제까지 실전 예제 코드와 함께."
+image: "/assets/img/posts/2025-11-15-toss-apps-in-toss-login-implementation.webp"
 ---
 
 ## 1. 서론
