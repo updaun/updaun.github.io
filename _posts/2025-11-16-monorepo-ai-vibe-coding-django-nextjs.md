@@ -5,6 +5,7 @@ date: 2025-11-16 09:00:00 +0900
 categories: [Monorepo, AI, DevOps]
 tags: [monorepo, ai-coding, django, nextjs, vibe-coding, cursor, github-copilot, productivity, fullstack]
 description: "모노레포로 Django 백엔드와 Next.js 프론트엔드를 통합 관리하며 AI Vibe Coding으로 개발 생산성을 극대화하는 실전 가이드. 컨텍스트 공유부터 자동화까지."
+image: "/assets/img/posts/2025-11-16-monorepo-ai-vibe-coding-django-nextjs.webp"
 ---
 
 ## 1. 서론: 모노레포 × AI Vibe Coding의 시너지
