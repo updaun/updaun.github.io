@@ -4,6 +4,7 @@ title: "AWS S3 vs Cloudflare R2 완벽 비교 - Presigned URL로 이미지 업�
 date: 2025-11-19
 categories: [AWS, Cloudflare, Cloud Storage]
 tags: [S3, R2, Cloudflare, Object Storage, Presigned URL, Image Upload, Cost Optimization]
+image: "/assets/img/posts/2025-11-19-aws-s3-vs-cloudflare-r2-comparison.webp"
 ---
 
 # AWS S3 vs Cloudflare R2 완벽 비교 - Presigned URL로 이미지 업로드하기
