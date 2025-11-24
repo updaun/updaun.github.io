@@ -1649,5 +1649,1063 @@ def extend_point_expiry(user, days_to_extend=90):
     return extended_count
 ```
 
-첫 8개 섹션 완성! 이제 보안, 성능, 테스트, 주의사항을 마무리하겠습니다.
+---
+
+## 9. 보안 고려사항
+
+### 9.1 권한 검증
+
+```python
+# points/auth.py
+from ninja.security import HttpBearer
+from django.contrib.auth.models import AnonymousUser
+
+class AuthBearer(HttpBearer):
+    def authenticate(self, request, token):
+        try:
+            # JWT 검증 또는 Session 확인
+            user = get_user_from_token(token)
+            return user
+        except:
+            return None
+
+# API에 인증 적용
+from ninja import Router
+from .auth import AuthBearer
+
+router = Router(auth=AuthBearer(), tags=["Points"])
+
+@router.get("/balance")
+def get_balance(request):
+    # request.user는 자동으로 인증된 사용자
+    user = request.auth  # 또는 request.user
+    # ...
+
+# 본인 확인
+@router.get("/users/{user_id}/points")
+def get_user_points(request, user_id: int):
+    # 본인 또는 관리자만 조회 가능
+    if request.user.id != user_id and not request.user.is_staff:
+        return 403, {"error": "Permission denied"}
+    
+    wallet = PointWallet.objects.get(user_id=user_id)
+    return {"balance": wallet.balance}
+```
+
+### 9.2 Rate Limiting
+
+```python
+# Django-ratelimit 사용
+from django_ratelimit.decorators import ratelimit
+from django.core.cache import cache
+import hashlib
+
+def rate_limit_key(group, request):
+    """Rate limit key 생성"""
+    return f"{group}:{request.user.id}"
+
+# API에 Rate Limit 적용
+from ninja import Router
+from functools import wraps
+
+def rate_limit(max_requests=10, period=60):
+    """
+    Rate Limiting 데코레이터
+    
+    Args:
+        max_requests: 최대 요청 수
+        period: 기간 (초)
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(request, *args, **kwargs):
+            # 키 생성
+            key = f"rate_limit:{func.__name__}:{request.user.id}"
+            
+            # 현재 카운트
+            count = cache.get(key, 0)
+            
+            if count >= max_requests:
+                return 429, {
+                    "error": "Too many requests",
+                    "detail": f"Maximum {max_requests} requests per {period} seconds"
+                }
+            
+            # 카운트 증가
+            cache.set(key, count + 1, period)
+            
+            return func(request, *args, **kwargs)
+        
+        return wrapper
+    return decorator
+
+# 사용
+@router.post("/use")
+@rate_limit(max_requests=10, period=60)  # 1분에 10회
+def use_points(request, data: UsePointsIn):
+    # ...
+    pass
+
+# IP 기반 Rate Limit (악의적 요청 방지)
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+@router.post("/earn")
+def earn_points_with_ip_limit(request, data: EarnPointsIn):
+    ip = get_client_ip(request)
+    key = f"rate_limit:earn:ip:{ip}"
+    
+    count = cache.get(key, 0)
+    if count >= 100:  # IP당 1시간에 100회
+        return 429, {"error": "Too many requests from this IP"}
+    
+    cache.set(key, count + 1, 3600)
+    
+    # 실제 처리
+    # ...
+```
+
+### 9.3 입력 검증 강화
+
+```python
+# schemas.py
+from ninja import Schema
+from pydantic import validator, Field
+from decimal import Decimal
+
+class EarnPointsIn(Schema):
+    amount: Decimal = Field(..., gt=0, le=1000000)
+    reason_code: str
+    description: str = Field(..., min_length=1, max_length=500)
+    idempotency_key: str = Field(..., min_length=10, max_length=255)
+    related_order_id: Optional[int] = Field(None, gt=0)
+    
+    @validator('amount')
+    def validate_amount(cls, v):
+        # 소수점 2자리까지만
+        if v.as_tuple().exponent < -2:
+            raise ValueError('Amount must have at most 2 decimal places')
+        
+        # 최소값
+        if v < Decimal('0.01'):
+            raise ValueError('Amount must be at least 0.01')
+        
+        return v
+    
+    @validator('reason_code')
+    def validate_reason_code(cls, v):
+        valid_codes = [
+            'PURCHASE', 'REVIEW', 'ATTENDANCE',
+            'SIGNUP_BONUS', 'REFERRAL', 'ADMIN'
+        ]
+        if v not in valid_codes:
+            raise ValueError(f'Invalid reason_code. Must be one of: {valid_codes}')
+        return v
+    
+    @validator('idempotency_key')
+    def validate_idempotency_key(cls, v):
+        # 영숫자, 하이픈, 언더스코어만 허용
+        import re
+        if not re.match(r'^[a-zA-Z0-9_:-]+$', v):
+            raise ValueError('Idempotency key contains invalid characters')
+        return v
+
+# SQL Injection 방지 (ORM 사용으로 기본 방지)
+# ✅ 올바른 방식
+def get_transactions(user_id):
+    return PointTransaction.objects.filter(wallet__user_id=user_id)
+
+# ❌ 절대 금지!
+def bad_query(user_id):
+    from django.db import connection
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT * FROM transactions WHERE user_id = {user_id}")
+    # → SQL Injection 취약점!
+```
+
+### 9.4 민감 정보 보호
+
+```python
+# 로그에서 민감 정보 마스킹
+import logging
+import re
+
+class SensitiveDataFilter(logging.Filter):
+    """민감 정보 필터링"""
+    
+    def filter(self, record):
+        # 로그 메시지에서 카드번호, 이메일 등 마스킹
+        if hasattr(record, 'msg'):
+            msg = str(record.msg)
+            
+            # 카드번호 마스킹
+            msg = re.sub(r'\d{13,16}', '****-****-****-****', msg)
+            
+            # 이메일 마스킹
+            msg = re.sub(
+                r'([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})',
+                r'***@\2',
+                msg
+            )
+            
+            record.msg = msg
+        
+        return True
+
+# settings.py
+LOGGING = {
+    'version': 1,
+    'filters': {
+        'sensitive_data': {
+            '()': 'points.filters.SensitiveDataFilter',
+        }
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'points.log',
+            'filters': ['sensitive_data'],
+        }
+    },
+    'loggers': {
+        'points': {
+            'handlers': ['file'],
+            'level': 'INFO',
+        }
+    }
+}
+
+# API 응답에서 민감 정보 제외
+class PointTransactionOut(Schema):
+    id: int
+    amount: Decimal
+    created_at: datetime
+    # ❌ 포함하지 말아야 할 것들:
+    # - created_by (다른 사용자 정보)
+    # - internal_notes (내부 메모)
+    # - ip_address (IP 주소)
+```
+
+### 9.5 관리자 기능 보안
+
+```python
+# 관리자 전용 엔드포인트
+from ninja import Router
+
+admin_router = Router(tags=["Admin"])
+
+@admin_router.post("/users/{user_id}/adjust-points")
+def admin_adjust_points(
+    request,
+    user_id: int,
+    amount: Decimal,
+    reason: str
+):
+    # 관리자 권한 확인
+    if not request.user.is_staff:
+        return 403, {"error": "Admin access required"}
+    
+    # 감사 로그 기록
+    audit_log = AdminAction.objects.create(
+        admin_user=request.user,
+        action_type='ADJUST_POINTS',
+        target_user_id=user_id,
+        data={
+            'amount': str(amount),
+            'reason': reason
+        },
+        ip_address=get_client_ip(request),
+        timestamp=timezone.now()
+    )
+    
+    # 포인트 조정
+    try:
+        if amount > 0:
+            trans, _ = PointService.earn_points(
+                user=User.objects.get(id=user_id),
+                amount=amount,
+                reason_code='ADMIN',
+                description=f"관리자 지급: {reason}",
+                idempotency_key=f"admin_{audit_log.id}_{timezone.now().timestamp()}",
+                created_by=request.user
+            )
+        else:
+            trans, _ = PointService.use_points(
+                user=User.objects.get(id=user_id),
+                amount=-amount,
+                reason_code='ADMIN',
+                description=f"관리자 차감: {reason}",
+                idempotency_key=f"admin_{audit_log.id}_{timezone.now().timestamp()}",
+                created_by=request.user
+            )
+        
+        return {"success": True, "transaction": trans}
+        
+    except Exception as e:
+        audit_log.error_message = str(e)
+        audit_log.save()
+        return 500, {"error": str(e)}
+
+# 감사 로그 모델
+class AdminAction(models.Model):
+    admin_user = models.ForeignKey(User, on_delete=models.PROTECT)
+    action_type = models.CharField(max_length=50)
+    target_user_id = models.IntegerField()
+    data = models.JSONField()
+    ip_address = models.GenericIPAddressField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    error_message = models.TextField(blank=True)
+    
+    class Meta:
+        db_table = 'admin_actions'
+        indexes = [
+            models.Index(fields=['admin_user', '-timestamp']),
+            models.Index(fields=['target_user_id', '-timestamp']),
+        ]
+```
+
+---
+
+## 10. 성능 최적화
+
+### 10.1 데이터베이스 최적화
+
+```python
+# 1. 적절한 인덱스
+class PointTransaction(models.Model):
+    # ...
+    
+    class Meta:
+        indexes = [
+            # 복합 인덱스 (자주 함께 조회되는 필드)
+            models.Index(
+                fields=['wallet', '-created_at'],
+                name='idx_wallet_date'
+            ),
+            # 만료 처리용
+            models.Index(
+                fields=['transaction_type', 'is_expired', 'expires_at'],
+                name='idx_expire_query'
+            ),
+            # Idempotency 조회용
+            models.Index(
+                fields=['idempotency_key'],
+                name='idx_idempotency'
+            ),
+        ]
+
+# 2. 쿼리 최적화
+def get_point_history_optimized(user_id, page=1, page_size=20):
+    """N+1 쿼리 방지"""
+    
+    # ❌ 나쁜 예: N+1 문제
+    transactions = PointTransaction.objects.filter(wallet__user_id=user_id)
+    for trans in transactions:
+        print(trans.wallet.user.username)  # 매번 DB 조회!
+    
+    # ✅ 좋은 예: select_related
+    transactions = PointTransaction.objects.filter(
+        wallet__user_id=user_id
+    ).select_related(
+        'wallet__user',  # JOIN으로 한 번에 조회
+        'created_by'
+    ).prefetch_related(
+        'usages__earn_transaction'  # 관련 사용 내역
+    )[page_size * (page - 1):page_size * page]
+    
+    return transactions
+
+# 3. 집계 쿼리 최적화
+def get_monthly_stats(user_id, year, month):
+    """월별 통계"""
+    from django.db.models import Sum, Count
+    
+    start_date = datetime(year, month, 1)
+    end_date = (start_date + timedelta(days=32)).replace(day=1)
+    
+    stats = PointTransaction.objects.filter(
+        wallet__user_id=user_id,
+        created_at__gte=start_date,
+        created_at__lt=end_date
+    ).aggregate(
+        total_earned=Sum(
+            'amount',
+            filter=models.Q(transaction_type='EARN')
+        ),
+        total_used=Sum(
+            'amount',
+            filter=models.Q(transaction_type='USE')
+        ),
+        transaction_count=Count('id')
+    )
+    
+    return stats
+
+# 4. 부분 인덱스 (PostgreSQL)
+class Migration(migrations.Migration):
+    operations = [
+        migrations.RunSQL(
+            # 만료되지 않은 적립만 인덱스
+            sql="""
+                CREATE INDEX idx_active_earns 
+                ON point_transactions (wallet_id, expires_at)
+                WHERE transaction_type = 'EARN' 
+                AND is_expired = false;
+            """,
+            reverse_sql="DROP INDEX idx_active_earns;"
+        ),
+    ]
+```
+
+### 10.2 캐싱 전략
+
+```python
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
+# 1. 잔액 캐싱
+def get_balance_cached(user_id):
+    """잔액 조회 (캐싱)"""
+    cache_key = f"point_balance:{user_id}"
+    
+    # 캐시 조회
+    balance = cache.get(cache_key)
+    
+    if balance is None:
+        # DB 조회
+        wallet = PointWallet.objects.get(user_id=user_id)
+        balance = wallet.balance
+        
+        # 캐시 저장 (5분)
+        cache.set(cache_key, balance, 300)
+    
+    return balance
+
+# 2. 캐시 무효화
+@transaction.atomic
+def use_points_with_cache(user, amount, **kwargs):
+    """포인트 사용 + 캐시 무효화"""
+    
+    trans, created = PointService.use_points(user, amount, **kwargs)
+    
+    if created:
+        # 캐시 삭제
+        cache_key = f"point_balance:{user.id}"
+        cache.delete(cache_key)
+        
+        # 관련 캐시도 삭제
+        cache.delete(f"point_expiring:{user.id}")
+        cache.delete(f"point_history:{user.id}:*")  # 패턴 삭제
+    
+    return trans, created
+
+# 3. 통계 캐싱 (장기)
+def get_total_stats():
+    """전체 통계 (1시간 캐싱)"""
+    cache_key = "point_total_stats"
+    
+    stats = cache.get(cache_key)
+    
+    if stats is None:
+        from django.db.models import Sum, Count
+        
+        stats = {
+            'total_users': PointWallet.objects.count(),
+            'total_balance': PointWallet.objects.aggregate(
+                total=Sum('balance')
+            )['total'],
+            'total_transactions': PointTransaction.objects.count(),
+        }
+        
+        cache.set(cache_key, stats, 3600)  # 1시간
+    
+    return stats
+
+# 4. Redis를 활용한 분산 잠금
+import redis
+from contextlib import contextmanager
+
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
+
+@contextmanager
+def redis_lock(key, timeout=10):
+    """Redis 분산 잠금"""
+    lock_key = f"lock:{key}"
+    
+    # 잠금 획득 시도
+    acquired = redis_client.set(lock_key, '1', nx=True, ex=timeout)
+    
+    if not acquired:
+        raise ValueError("Could not acquire lock")
+    
+    try:
+        yield
+    finally:
+        redis_client.delete(lock_key)
+
+# 사용
+def process_with_lock(user_id):
+    with redis_lock(f"user_points:{user_id}"):
+        # 중복 방지된 처리
+        pass
+```
+
+### 10.3 배치 처리 최적화
+
+```python
+# 대량 포인트 지급
+def bulk_earn_points(user_point_list):
+    """
+    배치로 포인트 지급
+    
+    Args:
+        user_point_list: [(user_id, amount, reason), ...]
+    """
+    from django.db import transaction
+    
+    transactions_to_create = []
+    wallets_to_update = {}
+    
+    with transaction.atomic():
+        # 1. 지갑 일괄 조회 및 잠금
+        user_ids = [item[0] for item in user_point_list]
+        wallets = {
+            w.user_id: w 
+            for w in PointWallet.objects.select_for_update().filter(
+                user_id__in=user_ids
+            )
+        }
+        
+        # 2. 거래 생성 준비
+        now = timezone.now()
+        
+        for user_id, amount, reason in user_point_list:
+            wallet = wallets[user_id]
+            new_balance = wallet.balance + amount
+            
+            transactions_to_create.append(
+                PointTransaction(
+                    wallet=wallet,
+                    transaction_type='EARN',
+                    amount=amount,
+                    balance_after=new_balance,
+                    reason_code=reason,
+                    idempotency_key=f"bulk_{user_id}_{now.timestamp()}",
+                    expires_at=now + timedelta(days=365)
+                )
+            )
+            
+            wallets_to_update[wallet.id] = {
+                'balance': new_balance,
+                'total_earned': wallet.total_earned + amount
+            }
+        
+        # 3. 일괄 생성
+        PointTransaction.objects.bulk_create(transactions_to_create)
+        
+        # 4. 일괄 업데이트
+        for wallet_id, updates in wallets_to_update.items():
+            PointWallet.objects.filter(id=wallet_id).update(**updates)
+    
+    return len(transactions_to_create)
+
+# Celery로 비동기 처리
+@shared_task
+def process_daily_attendance_points():
+    """출석 체크 포인트 일괄 지급"""
+    
+    # 오늘 출석한 사용자
+    attended_users = Attendance.objects.filter(
+        date=timezone.now().date()
+    ).values_list('user_id', flat=True)
+    
+    # 배치 지급
+    user_point_list = [
+        (user_id, Decimal('10.00'), 'ATTENDANCE')
+        for user_id in attended_users
+    ]
+    
+    count = bulk_earn_points(user_point_list)
+    
+    logger.info(f"Attendance points granted to {count} users")
+    return count
+```
+
+---
+
+## 11. 테스트 전략
+
+### 11.1 단위 테스트
+
+```python
+# points/tests/test_services.py
+from django.test import TestCase, TransactionTestCase
+from django.contrib.auth import get_user_model
+from decimal import Decimal
+from points.services import PointService
+from points.models import PointWallet, PointTransaction
+
+User = get_user_model()
+
+class PointServiceTest(TransactionTestCase):
+    """포인트 서비스 테스트"""
+    
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com'
+        )
+    
+    def test_earn_points_success(self):
+        """포인트 적립 성공"""
+        # Given
+        amount = Decimal('1000.00')
+        
+        # When
+        trans, created = PointService.earn_points(
+            user=self.user,
+            amount=amount,
+            reason_code='PURCHASE',
+            description='테스트 구매',
+            idempotency_key='test_earn_1'
+        )
+        
+        # Then
+        self.assertTrue(created)
+        self.assertEqual(trans.amount, amount)
+        
+        wallet = PointWallet.objects.get(user=self.user)
+        self.assertEqual(wallet.balance, amount)
+        self.assertEqual(wallet.total_earned, amount)
+    
+    def test_earn_points_idempotency(self):
+        """중복 적립 방지"""
+        # Given
+        key = 'test_idempotency_1'
+        
+        # When - 첫 번째 요청
+        trans1, created1 = PointService.earn_points(
+            user=self.user,
+            amount=Decimal('100.00'),
+            reason_code='PURCHASE',
+            description='테스트',
+            idempotency_key=key
+        )
+        
+        # When - 두 번째 요청 (같은 키)
+        trans2, created2 = PointService.earn_points(
+            user=self.user,
+            amount=Decimal('100.00'),
+            reason_code='PURCHASE',
+            description='테스트',
+            idempotency_key=key
+        )
+        
+        # Then
+        self.assertTrue(created1)
+        self.assertFalse(created2)  # 중복 요청
+        self.assertEqual(trans1.id, trans2.id)  # 같은 거래
+        
+        wallet = PointWallet.objects.get(user=self.user)
+        self.assertEqual(wallet.balance, Decimal('100.00'))  # 한 번만 적립
+    
+    def test_use_points_insufficient_balance(self):
+        """잔액 부족 시 사용 실패"""
+        # Given
+        PointService.earn_points(
+            user=self.user,
+            amount=Decimal('100.00'),
+            reason_code='PURCHASE',
+            description='테스트',
+            idempotency_key='earn_1'
+        )
+        
+        # When & Then
+        with self.assertRaises(ValueError) as context:
+            PointService.use_points(
+                user=self.user,
+                amount=Decimal('200.00'),  # 잔액보다 많음
+                reason_code='PAYMENT',
+                description='테스트',
+                idempotency_key='use_1'
+            )
+        
+        self.assertIn('Insufficient balance', str(context.exception))
+        
+        # 잔액 변동 없음
+        wallet = PointWallet.objects.get(user=self.user)
+        self.assertEqual(wallet.balance, Decimal('100.00'))
+    
+    def test_use_points_fifo(self):
+        """FIFO 순서로 사용"""
+        # Given - 3번 적립
+        PointService.earn_points(
+            self.user, Decimal('100.00'), 'PURCHASE', 'First', 'earn_1'
+        )
+        PointService.earn_points(
+            self.user, Decimal('200.00'), 'PURCHASE', 'Second', 'earn_2'
+        )
+        PointService.earn_points(
+            self.user, Decimal('300.00'), 'PURCHASE', 'Third', 'earn_3'
+        )
+        
+        # When - 250 사용
+        PointService.use_points(
+            self.user, Decimal('250.00'), 'PAYMENT', 'Test', 'use_1'
+        )
+        
+        # Then - 첫 번째(100) + 두 번째 일부(150) 사용
+        from points.models import PointUsage
+        
+        usages = PointUsage.objects.filter(
+            use_transaction__idempotency_key='use_1'
+        ).order_by('earn_transaction__created_at')
+        
+        self.assertEqual(len(usages), 2)
+        self.assertEqual(usages[0].amount, Decimal('100.00'))  # First 전체
+        self.assertEqual(usages[1].amount, Decimal('150.00'))  # Second 일부
+```
+
+### 11.2 동시성 테스트
+
+```python
+import threading
+from django.test import TransactionTestCase
+
+class ConcurrencyTest(TransactionTestCase):
+    """동시성 제어 테스트"""
+    
+    def test_concurrent_use_points(self):
+        """동시에 포인트 사용 시 Race Condition 방지"""
+        # Given
+        user = User.objects.create_user(username='concurrent_test')
+        PointService.earn_points(
+            user, Decimal('1000.00'), 'PURCHASE', 'Init', 'init_1'
+        )
+        
+        results = []
+        errors = []
+        
+        def use_points_thread(amount, key):
+            try:
+                trans, created = PointService.use_points(
+                    user, amount, 'PAYMENT', 'Test', key
+                )
+                results.append((trans, created))
+            except Exception as e:
+                errors.append(e)
+        
+        # When - 동시에 10개 요청 (각 200 포인트)
+        threads = []
+        for i in range(10):
+            thread = threading.Thread(
+                target=use_points_thread,
+                args=(Decimal('200.00'), f'concurrent_{i}')
+            )
+            threads.append(thread)
+            thread.start()
+        
+        for thread in threads:
+            thread.join()
+        
+        # Then
+        # 5개 성공, 5개 실패 (잔액 1000, 200씩 5번 = 1000)
+        self.assertEqual(len(results), 5)
+        self.assertEqual(len(errors), 5)
+        
+        # 최종 잔액 0
+        wallet = PointWallet.objects.get(user=user)
+        self.assertEqual(wallet.balance, Decimal('0.00'))
+        
+        # 모든 에러가 잔액 부족
+        for error in errors:
+            self.assertIn('Insufficient balance', str(error))
+```
+
+### 11.3 통합 테스트
+
+```python
+# API 통합 테스트
+from ninja.testing import TestClient
+from config.urls import api
+
+class PointAPITest(TestCase):
+    """포인트 API 통합 테스트"""
+    
+    def setUp(self):
+        self.client = TestClient(api)
+        self.user = User.objects.create_user(
+            username='apitest',
+            password='testpass123'
+        )
+        # 인증 토큰
+        self.token = generate_token(self.user)
+    
+    def test_earn_points_api(self):
+        """포인트 적립 API"""
+        response = self.client.post(
+            '/points/earn',
+            json={
+                'amount': '1000.00',
+                'reason_code': 'PURCHASE',
+                'description': 'API 테스트',
+                'idempotency_key': 'api_test_1'
+            },
+            headers={'Authorization': f'Bearer {self.token}'}
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['amount'], '1000.00')
+    
+    def test_get_balance_api(self):
+        """잔액 조회 API"""
+        # Given - 포인트 적립
+        PointService.earn_points(
+            self.user, Decimal('5000.00'), 'PURCHASE', 'Test', 'setup_1'
+        )
+        
+        # When
+        response = self.client.get(
+            '/points/balance',
+            headers={'Authorization': f'Bearer {self.token}'}
+        )
+        
+        # Then
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['balance'], '5000.00')
+```
+
+---
+
+## 12. 실전 주의사항
+
+### 12.1 반드시 피해야 할 실수
+
+```python
+# ❌ 실수 1: Float 사용
+class BadPointWallet(models.Model):
+    balance = models.FloatField()  # 절대 금지!
+
+# 문제:
+0.1 + 0.2 = 0.30000000000000004  # 부동소수점 오차
+1000.00 - 0.01 = 999.99... 또는 1000.00  # 불확실
+
+# ✅ 올바른 방법: Decimal
+from decimal import Decimal
+
+class PointWallet(models.Model):
+    balance = models.DecimalField(max_digits=12, decimal_places=2)
+
+# 사용:
+balance = Decimal('1000.00')
+balance -= Decimal('0.01')  # 정확히 999.99
+
+
+# ❌ 실수 2: 트랜잭션 없이 잔액 업데이트
+def bad_update(user_id, amount):
+    wallet = PointWallet.objects.get(user_id=user_id)
+    wallet.balance += amount  # Race Condition!
+    wallet.save()
+
+# ✅ 올바른 방법
+@transaction.atomic
+def good_update(user_id, amount):
+    wallet = PointWallet.objects.select_for_update().get(user_id=user_id)
+    wallet.balance += amount
+    wallet.save()
+
+
+# ❌ 실수 3: Idempotency 없음
+def bad_earn(user, amount):
+    # 중복 요청 시 여러 번 적립!
+    wallet = PointWallet.objects.get(user=user)
+    wallet.balance += amount
+    wallet.save()
+
+# ✅ 올바른 방법
+def good_earn(user, amount, idempotency_key):
+    if PointTransaction.objects.filter(idempotency_key=idempotency_key).exists():
+        return  # 중복 방지
+    # ...
+
+
+# ❌ 실수 4: 거래 내역 삭제/수정
+def bad_cancel(transaction_id):
+    trans = PointTransaction.objects.get(id=transaction_id)
+    trans.delete()  # 감사 추적 불가!
+
+# ✅ 올바른 방법
+def good_cancel(transaction_id):
+    original = PointTransaction.objects.get(id=transaction_id)
+    # 반대 거래 생성
+    PointTransaction.objects.create(
+        wallet=original.wallet,
+        transaction_type='CANCEL',
+        amount=-original.amount,
+        # ...
+    )
+
+
+# ❌ 실수 5: 만료 체크 없이 사용
+def bad_use(user, amount):
+    wallet = PointWallet.objects.get(user=user)
+    if wallet.balance >= amount:
+        wallet.balance -= amount  # 만료된 포인트도 사용!
+        wallet.save()
+
+# ✅ 올바른 방법
+def good_use(user, amount):
+    # 만료되지 않은 포인트만 조회
+    available_earns = PointTransaction.objects.filter(
+        wallet__user=user,
+        transaction_type='EARN',
+        is_expired=False,
+        expires_at__gt=timezone.now()  # 만료 체크!
+    )
+    # FIFO로 사용
+    # ...
+```
+
+### 12.2 성능 주의사항
+
+```python
+# ⚠️ 주의 1: 큰 테이블 전체 스캔
+def bad_query():
+    # 수백만 건 조회 → 느림!
+    all_trans = PointTransaction.objects.all()
+
+# ✅ 개선: 페이징 또는 필터링
+def good_query(user_id, page=1, size=20):
+    return PointTransaction.objects.filter(
+        wallet__user_id=user_id
+    )[:size]
+
+
+# ⚠️ 주의 2: N+1 쿼리
+def bad_history(user_id):
+    trans = PointTransaction.objects.filter(wallet__user_id=user_id)
+    for t in trans:
+        print(t.wallet.user.username)  # 매번 쿼리!
+
+# ✅ 개선: select_related
+def good_history(user_id):
+    trans = PointTransaction.objects.filter(
+        wallet__user_id=user_id
+    ).select_related('wallet__user')
+
+
+# ⚠️ 주의 3: 비효율적 집계
+def bad_sum(user_id):
+    trans = PointTransaction.objects.filter(wallet__user_id=user_id)
+    total = sum([t.amount for t in trans])  # 파이썬에서 계산!
+
+# ✅ 개선: DB 집계
+def good_sum(user_id):
+    result = PointTransaction.objects.filter(
+        wallet__user_id=user_id
+    ).aggregate(total=Sum('amount'))
+    return result['total']
+```
+
+### 12.3 체크리스트
+
+**배포 전 필수 확인:**
+
+```
+□ Decimal 사용 (Float 금지)
+□ select_for_update로 동시성 제어
+□ @transaction.atomic 사용
+□ Idempotency Key 구현
+□ 잔액 음수 방지 (DB Constraint)
+□ 만료 처리 배치 작업
+□ 인덱스 최적화
+□ Rate Limiting 적용
+□ 입력 검증 강화
+□ 로깅 및 모니터링
+□ 단위 테스트 작성
+□ 동시성 테스트 작성
+□ API 문서화
+□ 에러 핸들링
+□ 감사 로그 구현
+```
+
+---
+
+## 결론
+
+### 핵심 요약
+
+Django-Ninja로 안전한 포인트 시스템을 구축하기 위한 핵심 원칙:
+
+1. **동시성 제어**: `select_for_update()` + `@transaction.atomic` 필수
+2. **Idempotency**: 중복 요청 방지로 정합성 보장
+3. **Decimal 사용**: Float 절대 금지, 정확한 금액 계산
+4. **불변 로그**: 거래 내역 삭제/수정 금지, 취소는 반대 거래로
+5. **FIFO 관리**: 포인트 사용 시 선입선출 구현
+6. **만료 처리**: 자동 배치 작업으로 만료 포인트 관리
+7. **보안**: 인증, 권한, Rate Limiting, 입력 검증
+8. **성능**: 인덱싱, 쿼리 최적화, 캐싱 전략
+9. **테스트**: 단위, 동시성, 통합 테스트 작성
+10. **모니터링**: 로깅, 감사 추적, 알림
+
+### 실전 적용 순서
+
+```
+1단계: 기본 구조 (1-2일)
+- 모델 설계 (Decimal, 인덱스)
+- 기본 API (조회, 적립, 사용)
+- Pydantic 스키마
+
+2단계: 동시성 제어 (1일)
+- select_for_update 적용
+- transaction.atomic 적용
+- 음수 방지 Constraint
+
+3단계: Idempotency (1일)
+- Idempotency Key 구현
+- 중복 처리 로직
+- 테스트 작성
+
+4단계: FIFO & 만료 (1-2일)
+- PointUsage 모델
+- FIFO 사용 로직
+- 만료 배치 작업
+
+5단계: 보안 & 성능 (1-2일)
+- 인증/권한
+- Rate Limiting
+- 쿼리 최적화
+- 캐싱
+
+6단계: 운영 준비 (1일)
+- 로깅/모니터링
+- 감사 로그
+- API 문서화
+```
+
+### 추가 학습 자료
+
+- [Django-Ninja 공식 문서](https://django-ninja.rest-framework.com/)
+- [Django 트랜잭션 가이드](https://docs.djangoproject.com/en/stable/topics/db/transactions/)
+- [PostgreSQL Lock 모드](https://www.postgresql.org/docs/current/explicit-locking.html)
+- [Idempotency 패턴](https://stripe.com/docs/api/idempotent_requests)
+
+**안전하고 확장 가능한 포인트 시스템 구축 화이팅!** 🚀💰
+
+---
+
+## 참고 코드
+
+전체 예제 코드는 GitHub에서 확인할 수 있습니다:
+- [Django-Ninja Point System Example](https://github.com/example/django-ninja-points)
+
 
