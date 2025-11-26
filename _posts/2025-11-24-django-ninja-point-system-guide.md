@@ -4,6 +4,7 @@ title: "Django-Ninja로 안전한 포인트 시스템 구축하기 - 동시성 �
 date: 2025-11-24
 categories: [Django, Backend, API]
 tags: [Django-Ninja, Point System, Concurrency Control, Transaction, Race Condition, API Security]
+image: "/assets/img/posts/2025-11-24-django-ninja-point-system-guide.webp"
 ---
 
 # Django-Ninja로 안전한 포인트 시스템 구축하기 - 동시성 제어부터 보안까지
