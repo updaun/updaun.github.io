@@ -4,6 +4,7 @@ title: "Django-Ninja로 구축하는 모바일 청첩장 서비스 - 데이터 �
 categories: [Django, Backend]
 tags: [django-ninja, wedding-invitation, data-structure, multi-tenancy, template-system, postgresql, jsonfield]
 date: 2025-11-27 09:00:00 +0900
+image: "/assets/img/posts/2025-11-27-django-ninja-mobile-wedding-invitation-data-structure.webp"
 ---
 
 ## 1. 서비스 개요 및 요구사항
