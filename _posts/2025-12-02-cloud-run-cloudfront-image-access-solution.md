@@ -4,6 +4,7 @@ title: "Cloud Run에서 CloudFront 이미지 접근 불가 문제 해결 - URL�
 categories: [Cloud, Backend]
 tags: [google-cloud-run, aws-cloudfront, fastapi, cors, base64, image-processing, security, workaround]
 date: 2025-12-02 09:00:00 +0900
+image: "/assets/img/posts/2025-12-02-cloud-run-cloudfront-image-access-solution.webp"
 ---
 
 ## 1. 문제 상황 - CloudFront 이미지 접근 거부
