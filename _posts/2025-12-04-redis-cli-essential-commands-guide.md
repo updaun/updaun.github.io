@@ -4,6 +4,7 @@ title: "Redis CLI 필수 명령어 완벽 가이드 - 개발자가 가장 많이
 categories: [Database, Cache]
 tags: [redis, redis-cli, cache, nosql, database, commands, tutorial, backend]
 date: 2025-12-04 09:00:00 +0900
+image: "/assets/img/posts/2025-12-04-redis-cli-essential-commands-guide.webp"
 ---
 
 ## 1. Redis CLI 시작하기 - 연결 및 기본 명령어
