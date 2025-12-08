@@ -439,6 +439,7 @@ export const authService = new AuthService();
 
 ### 2.5 React 컴포넌트 예제
 
+{% raw %}
 ```tsx
 // src/App.tsx
 import React from 'react';
@@ -527,6 +528,7 @@ function App() {
 
 export default App;
 ```
+{% endraw %}
 
 ### 2.6 최초 로그인 vs 재로그인
 

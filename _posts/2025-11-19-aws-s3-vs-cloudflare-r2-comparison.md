@@ -1479,6 +1479,7 @@ export const useImageUpload = () => {
 
 **5) 이미지 업로드 컴포넌트 (components/ImageUpload.tsx)**
 
+{% raw %}
 ```typescript
 'use client';
 
@@ -1634,11 +1635,13 @@ export const ImageUpload: React.FC = () => {
   );
 };
 ```
+{% endraw %}
 
 ### 7.2 드래그 앤 드롭 업로드
 
 **고급 업로드 컴포넌트 (components/DragDropUpload.tsx)**
 
+{% raw %}
 ```typescript
 'use client';
 
@@ -1802,9 +1805,11 @@ export const DragDropUpload: React.FC = () => {
   );
 };
 ```
+{% endraw %}
 
 ### 7.3 다중 이미지 업로드
 
+{% raw %}
 ```typescript
 'use client';
 
@@ -2052,6 +2057,7 @@ export default {
   },
 };
 ```
+{% endraw %}
 
 ### 8.2 보안 강화
 

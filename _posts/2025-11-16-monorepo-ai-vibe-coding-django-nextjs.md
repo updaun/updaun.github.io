@@ -1772,6 +1772,7 @@ class Comment(models.Model):
 
 **해결책: AI로 자동 동기화**
 
+{% raw %}
 ```python
 # scripts/generate_types.py
 """Django 모델 → TypeScript 타입 자동 생성"""
@@ -1837,6 +1838,7 @@ with open('../shared/types/generated.ts', 'w') as f:
 
 print("✅ TypeScript types generated!")
 ```
+{% endraw %}
 
 **자동화:**
 
