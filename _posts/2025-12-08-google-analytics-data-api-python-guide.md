@@ -4,6 +4,7 @@ title: "Python으로 Google Analytics Data API 활용하기 - 완벽 가이드"
 date: 2025-12-08 14:00:00 +0900
 categories: [Analytics, Python]
 tags: [google-analytics, ga4, python, data-api, analytics, reporting]
+image: "/assets/img/posts/2025-12-08-google-analytics-data-api-python-guide.webp"
 ---
 
 ## 1. Google Analytics Data API란?
