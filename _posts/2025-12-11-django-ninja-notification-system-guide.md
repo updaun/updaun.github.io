@@ -5,6 +5,7 @@ date: 2025-12-11 09:00:00 +0900
 categories: [Django, Backend, Real-time]
 tags: [django-ninja, notification, websocket, celery, event-driven, redis, channels]
 description: "Django Ninja를 활용하여 이벤트 기반 실시간 알림 시스템을 구축하는 방법을 단계별로 알아봅니다. 주문, 댓글, 좋아요 등 다양한 이벤트에 대한 알림 발송 구조를 구현합니다."
+image: "/assets/img/posts/2025-12-11-django-ninja-notification-system-guide.webp"
 ---
 
 ## 목차
