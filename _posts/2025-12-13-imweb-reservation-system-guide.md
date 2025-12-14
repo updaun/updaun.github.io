@@ -5,6 +5,7 @@ date: 2025-12-13 10:00:00 +0900
 categories: [Web Development, No-Code, Business]
 tags: [imweb, 아임웹, reservation-system, no-code, booking, 예약시스템, 웹사이트제작]
 description: "아임웹을 활용하여 코딩 없이 전문적인 예약 시스템을 구축하는 방법을 단계별로 알아봅니다. 미용실, 병원, 학원, 스터디룸 등 다양한 예약 서비스에 적용 가능합니다."
+image: "/assets/img/posts/2025-12-13-imweb-reservation-system-guide.webp"
 ---
 
 ## 목차
