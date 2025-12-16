@@ -5,6 +5,7 @@ date: 2025-12-15 10:00:00 +0900
 categories: [Django, Backend, Authentication]
 tags: [django-ninja, apple-login, sign-in-with-apple, oauth, jwt, social-login, authentication]
 description: "Django Ninja를 활용하여 Apple 소셜 로그인(Sign in with Apple)을 처음부터 끝까지 구현하는 방법을 알아봅니다. JWT 검증, Apple Developer 설정, 보안 처리까지 완벽 가이드."
+image: "/assets/img/posts/2025-12-15-django-ninja-apple-social-login.webp"
 ---
 
 ## 목차
