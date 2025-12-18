@@ -5,6 +5,7 @@ date: 2025-12-17 09:00:00 +0900
 categories: [Backend, Performance, AI]
 tags: [FastAPI, LangGraph, LLM, MSA, Redis, RAG, VectorDB, Performance, Streaming, Optimization]
 description: "FastAPI와 LangGraph 기반 MSA LLM Streaming API의 성능을 획기적으로 향상시키는 실전 최적화 기법"
+image: "/assets/img/posts/2025-12-17-fastapi-langgraph-llm-api-performance-optimization.webp"
 ---
 
 ## 목차
