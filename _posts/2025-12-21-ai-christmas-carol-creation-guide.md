@@ -6,6 +6,7 @@ categories: [AI, Music, Tutorial]
 tags: [Suno AI, Runway AI, 크리스마스, 캐롤, 음악 제작, 뮤직비디오, AI 특강]
 author: updaun
 excerpt: "AI를 활용해 나만의 크리스마스 캐롤을 만드는 특강 준비 과정. Suno AI로 음악을 제작하고 Runway AI로 뮤직비디오를 완성하는 전 과정을 상세히 안내합니다."
+image: "/assets/img/posts/2025-12-21-ai-christmas-carol-creation-guide.webp"
 ---
 
 ## 들어가며: AI로 음악과 영상을 만드는 시대
