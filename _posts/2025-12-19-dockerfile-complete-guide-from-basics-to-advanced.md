@@ -2106,15 +2106,15 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          push: true  # event_name 체크
+          tags: ${{" steps.meta.outputs.tags "}}
+          labels: ${{" steps.meta.outputs.labels "}}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
-            GIT_COMMIT=${{ github.sha }}
-            VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
+            BUILD_DATE=2024-01-01
+            GIT_COMMIT=${{" github.sha "}}
+            VERSION=1.0.0
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master

@@ -1887,6 +1887,7 @@ def get_qr_code(request, slug: str):
 <!DOCTYPE html>
 <html>
 <head>
+{% raw %}
     <!-- Open Graph 메타 태그 -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{ invitation.title }}">
@@ -1896,6 +1897,7 @@ def get_qr_code(request, slug: str):
     {% if invitation.photos.filter(is_main=True).first %}
     <meta property="og:image" content="{{ invitation.photos.filter(is_main=True).first.image.url }}">
     {% endif %}
+{% endraw %}
     
     <!-- 카카오톡 -->
     <meta property="og:image:width" content="800">

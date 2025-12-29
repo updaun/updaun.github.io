@@ -1919,10 +1919,10 @@ jobs:
         if: always()
         uses: slackapi/slack-github-action@v1
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-url: ${{" secrets.SLACK_WEBHOOK_URL "}}
           payload: |
             {
-              "text": "${{ job.status == 'success' && '✅' || '❌' }} Deployment ${{ job.status }}",
+              "text": "Deployment status: ${{" job.status "}}",
               "blocks": [
                 {
                   "type": "section",

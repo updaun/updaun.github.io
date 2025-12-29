@@ -558,7 +558,7 @@ oversaturated, underexposed"
    → 의도와 반대 결과
 
 3. 과도한 강조
-   Negative: "{{{ugly:2.0}}}, {{{bad:1.8}}}"
+   Negative: "(((ugly:2.0))), (((bad:1.8)))"
    → AI가 과도하게 보정, 부자연스러움
 
 권장:
