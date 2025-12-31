@@ -29,6 +29,17 @@
 {% endif %}
 
 <!-- 추가 Open Graph 메타태그 -->
+
+<!-- Open Graph (카카오톡/페이스북/네이버 등) -->
+<meta property="og:type" content="{% if page.layout == 'post' %}article{% else %}website{% endif %}">
+<meta property="og:title" content="{{ page.title | default: site.seo.headline | default: site.title }}">
+<meta property="og:description" content="{{ page.excerpt | default: site.seo.description | default: site.description | strip_html | strip_newlines | truncate: 120 }}">
+<meta property="og:url" content="{{ page.url | absolute_url | default: site.url }}">
+<meta property="og:image" content="{% if page.image %}{{ page.image | absolute_url }}{% elsif site.og.image %}{{ site.og.image | absolute_url }}{% else %}{{ site.seo.image | default: '/assets/img/seo-image.png' | absolute_url }}{% endif %}">
+<meta property="og:site_name" content="{{ site.og.site_name | default: site.title }}">
+<meta property="og:locale" content="{{ site.og.locale | default: 'ko_KR' }}">
+
+<!-- 추가 article 정보 (포스트 전용) -->
 {% if page.layout == 'post' %}
 <meta property="article:published_time" content="{{ page.date | date_to_xmlschema }}">
 <meta property="article:modified_time" content="{{ page.last_modified_at | default: page.date | date_to_xmlschema }}">
