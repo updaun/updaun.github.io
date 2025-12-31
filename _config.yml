@@ -1,7 +1,18 @@
 theme: jekyll-theme-cayman
 show_downloads: false
 title: "Up & Daun"
-description: "AWS Solution Architect Associate 자격증 준비, 클라우드 아키텍처, Python 개발, 컴퓨터 비전 등 최신 기술 트렌드를 다루는 개발자 블로그입니다."
+description: "AWS, Python, 클라우드, 머신러닝, DevOps, 인공지능 등 최신 IT 트렌드와 실무 경험, 자격증 준비 노하우를 공유하는 개발자 블로그입니다. 실전 아키텍처, 개발 팁, 공부 자료까지 모두 제공합니다."
+keywords: "AWS, 클라우드, Python, 머신러닝, 개발, 블로그, Solution Architect, SAA, IT, 기술, 인공지능, DevOps, 웹개발, 자격증"
+
+# 대표 썸네일/메타 정보 (SEO/OG/카드용)
+meta:
+  title: "Up & Daun | AWS, 클라우드, Python, 개발 블로그"
+  description: "AWS, Python, 머신러닝, 클라우드 아키텍처, 최신 IT 트렌드와 실무 경험을 공유하는 개발자 블로그. SAA 자격증, DevOps, 인공지능, 웹 개발 등 다양한 주제를 다룹니다."
+  image: "/assets/img/og-image.jpg"
+  url: "https://updaun.github.io"
+  site_name: "Up & Daun"
+  locale: "ko_KR"
+  type: "website"
 url: "https://updaun.github.io"
 baseurl: ""
 
@@ -26,14 +37,14 @@ seo:
   name: "Up & Daun"
   headline: "개발자를 위한 클라우드 및 기술 블로그"
   description: "AWS, Python, 머신러닝, 웹 개발 등 최신 기술 트렌드와 실무 경험을 공유하는 블로그"
-  image: "/assets/img/seo-image.png"
+  image: "/assets/img/seo-image.jpg"
 
 # Open Graph / Twitter Card 설정
 og:
   type: "website"
   locale: "ko_KR"
   site_name: "Up & Daun"
-  image: "/assets/img/og-image.png"
+  image: "/assets/img/og-image.jpg"
   image_width: 1200
   image_height: 630
 
