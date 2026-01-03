@@ -4,6 +4,7 @@ title: "2026 Django 깊이 있는 학습 전략과 로드맵"
 date: 2026-01-01 10:00:00 +0900
 categories: [Django, Python, Web Development]
 tags: [Django, Python, Web Framework, Backend, Learning, Roadmap, Career]
+image: "/assets/img/posts/2026-01-01-django-deep-dive-learning-roadmap-2026.webp"
 ---
 
 새해를 맞아 Django를 더 깊이 있게 공부하기로 결심했습니다. 단순히 튜토리얼을 따라하는 수준을 넘어, Django의 내부 동작 원리를 이해하고 실전 프로젝트에서 최적의 아키텍처를 설계할 수 있는 수준까지 성장하는 것이 목표입니다. 이 글에서는 체계적인 Django 학습 전략과 단계별 로드맵, 그리고 각 단계에서 집중해야 할 핵심 주제들을 상세히 정리했습니다.
