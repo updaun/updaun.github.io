@@ -4,6 +4,7 @@ title: "Django Ninja로 구현하는 모바일 푸시 알림: FCM 완벽 가이�
 date: 2026-01-06 10:00:00 +0900
 categories: [Django, Python, Mobile, API]
 tags: [Django, Django Ninja, FCM, Push Notification, Firebase, Mobile Backend, REST API, Python]
+image: "/assets/img/posts/2026-01-06-django-ninja-push-notification-implementation.webp"
 ---
 
 Django Ninja는 FastAPI의 영감을 받아 만들어진 Django용 현대적인 API 프레임워크입니다. 이 글에서는 Django Ninja를 활용하여 Firebase Cloud Messaging(FCM)을 통한 푸시 알림 시스템을 구축하는 방법을 알아보겠습니다. 실무에서 바로 적용 가능한 코드와 함께 다양한 푸시 알림 방식도 비교해보겠습니다.
