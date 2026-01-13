@@ -4,6 +4,7 @@ title: "네이버 지도 API로 맛집 공유 서비스 만들기: API 선택부
 date: 2026-01-12
 categories: [Web Development, API]
 tags: [네이버 지도, Naver Maps API, 맛집 서비스, Local Search API, Geocoding, Web Service]
+image: "/assets/img/posts/2026-01-12-naver-maps-api-restaurant-sharing-service.webp"
 ---
 
 ## 들어가며
