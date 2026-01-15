@@ -4,6 +4,7 @@ title: "Django-Ninja 대량 트래픽 대응 전략: 성능 최적화부터 아�
 date: 2026-01-14 10:00:00 +0900
 categories: [Django, Performance, Architecture, DevOps]
 tags: [Django-Ninja, FastAPI, Performance, Redis, Caching, Auto-Scaling, Load-Balancing, Optimization, High-Traffic]
+image: "/assets/img/posts/2026-01-12-naver-maps-api-restaurant-sharing-service.webp"
 ---
 
 Django-Ninja로 API를 개발하다가 갑자기 트래픽이 급증하면 어떻게 대응해야 할까요? 많은 개발자들이 프레임워크만 선택하면 성능 문제가 자동으로 해결될 것이라 생각하지만, 실제로는 체계적인 최적화 전략이 필요합니다. 이 글에서는 Django-Ninja 기반 API 서비스의 대량 트래픽 대응 전략을 단계별로 살펴보겠습니다.
