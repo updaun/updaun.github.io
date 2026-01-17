@@ -4,6 +4,7 @@ title: "파이썬으로 만드는 실용적인 자동화 프로그램 - 업무 �
 date: 2026-01-16
 categories: python automation
 author: updaun
+image: "/assets/img/posts/2026-01-16-python-automation-programs-guide.webp"
 ---
 
 # 파이썬으로 만드는 실용적인 자동화 프로그램 - 업무 효율을 10배 높이는 방법
