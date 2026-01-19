@@ -415,3 +415,377 @@ api = NinjaAPI(
 
 중요한 변경사항은 슬랙이나 이메일로도 공지하되, 문서에 기록을 남겨두면 나중에 참고하기 좋습니다.
 
+## 고급 기능과 커스터마이징
+
+Django-Ninja는 다양한 고급 기능을 제공합니다. 프론트엔드 협업을 더욱 효율적으로 만들 수 있는 몇 가지를 소개합니다.
+
+### 1. 파일 업로드 문서화
+
+파일 업로드 API는 프론트엔드 개발자가 자주 헷갈려하는 부분입니다:
+
+```python
+from ninja import File, UploadedFile, Schema
+
+class ImageUploadResponse(Schema):
+    url: str = Field(..., description="업로드된 이미지 URL")
+    width: int = Field(..., description="이미지 너비 (픽셀)")
+    height: int = Field(..., description="이미지 높이 (픽셀)")
+    size: int = Field(..., description="파일 크기 (바이트)")
+
+@router.post("/upload/image", response=ImageUploadResponse)
+def upload_image(request, file: UploadedFile = File(...)):
+    """
+    이미지 파일을 업로드합니다.
+    
+    - **지원 형식**: JPEG, PNG, WebP
+    - **최대 크기**: 5MB
+    - **권장 해상도**: 1920x1080 이하
+    
+    ### 사용 예시 (JavaScript)
+    ```javascript
+    const formData = new FormData();
+    formData.append('file', imageFile);
+    
+    const response = await fetch('/api/upload/image', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    ```
+    """
+    # 파일 처리 로직...
+    return {
+        "url": uploaded_url,
+        "width": image.width,
+        "height": image.height,
+        "size": file.size
+    }
+
+# 여러 파일 업로드
+@router.post("/upload/images")
+def upload_multiple_images(request, files: List[UploadedFile] = File(...)):
+    """
+    여러 이미지를 한 번에 업로드합니다 (최대 10개).
+    """
+    pass
+```
+
+### 2. 필터링 파라미터 문서화
+
+복잡한 필터링 옵션은 스키마로 정리하면 문서가 깔끔해집니다:
+
+```python
+from ninja import Schema
+from typing import Optional
+from datetime import date
+
+class PostFilterSchema(Schema):
+    search: Optional[str] = Field(None, description="제목 또는 내용에서 검색")
+    author: Optional[str] = Field(None, description="작성자 사용자명")
+    tags: Optional[List[str]] = Field(None, description="태그 목록 (OR 조건)")
+    is_published: Optional[bool] = Field(None, description="발행 여부")
+    created_after: Optional[date] = Field(None, description="이 날짜 이후 작성")
+    created_before: Optional[date] = Field(None, description="이 날짜 이전 작성")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "search": "Django",
+                "tags": ["python", "backend"],
+                "is_published": True,
+                "created_after": "2026-01-01"
+            }
+        }
+
+@router.get("/posts", response=List[PostSchema])
+def list_posts(request, filters: PostFilterSchema = Query(...)):
+    """
+    다양한 조건으로 게시글을 필터링합니다.
+    
+    모든 필터는 AND 조건으로 적용되며, tags만 OR 조건입니다.
+    """
+    queryset = Post.objects.all()
+    
+    if filters.search:
+        queryset = queryset.filter(
+            Q(title__icontains=filters.search) | 
+            Q(content__icontains=filters.search)
+        )
+    
+    if filters.author:
+        queryset = queryset.filter(author=filters.author)
+        
+    # 나머지 필터 적용...
+    
+    return queryset
+```
+
+### 3. 웹훅 문서화하기
+
+시스템이 웹훅을 보내는 경우, 이를 명확히 문서화해야 합니다:
+
+```python
+class WebhookPostCreatedSchema(Schema):
+    """
+    게시글 생성 시 전송되는 웹훅 페이로드입니다.
+    
+    이 웹훅은 새 게시글이 발행될 때 등록된 URL로 POST 요청을 보냅니다.
+    
+    ### 헤더
+    - `X-Webhook-Signature`: HMAC-SHA256 서명
+    - `X-Webhook-Event`: "post.created"
+    
+    ### 재시도 정책
+    - 실패 시 1분, 5분, 30분 간격으로 최대 3회 재시도
+    - 2xx 응답을 성공으로 간주
+    """
+    event: str = Field("post.created", description="이벤트 타입")
+    timestamp: str = Field(..., description="이벤트 발생 시각 (ISO 8601)")
+    data: PostSchema = Field(..., description="생성된 게시글 정보")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "event": "post.created",
+                "timestamp": "2026-01-18T10:30:00Z",
+                "data": {
+                    "id": 123,
+                    "title": "Django-Ninja 튜토리얼",
+                    "content": "...",
+                    "author": "johndoe",
+                    "created_at": "2026-01-18T10:30:00Z",
+                    "tags": ["django", "python"],
+                    "is_published": True
+                }
+            }
+        }
+```
+
+이 스키마는 실제 API 엔드포인트가 아니라 웹훅 문서화 목적으로만 사용됩니다. 프론트엔드 개발자가 웹훅을 수신하는 서버를 구축할 때 참고할 수 있습니다.
+
+### 4. API 버저닝
+
+API 버전을 관리하려면 라우터를 분리하는 것이 좋습니다:
+
+```python
+# api/v1/posts.py
+from ninja import Router
+
+router_v1 = Router()
+
+@router_v1.get("/posts")
+def list_posts_v1(request):
+    """V1: 간단한 목록 반환"""
+    return Post.objects.all()[:20]
+
+# api/v2/posts.py
+router_v2 = Router()
+
+@router_v2.get("/posts", response=PaginatedResponse[PostSchema])
+def list_posts_v2(request, page: int = 1):
+    """V2: 페이지네이션 적용"""
+    # 구현...
+    pass
+
+# api.py
+from api.v1.posts import router_v1
+from api.v2.posts import router_v2
+
+api_v1 = NinjaAPI(version="1.0.0", urls_namespace="api-v1")
+api_v1.add_router("/blog", router_v1)
+
+api_v2 = NinjaAPI(version="2.0.0", urls_namespace="api-v2")
+api_v2.add_router("/blog", router_v2)
+
+# urls.py
+urlpatterns = [
+    path('api/v1/', api_v1.urls),
+    path('api/v2/', api_v2.urls),
+]
+```
+
+이렇게 하면 `/api/v1/docs`와 `/api/v2/docs`에서 각각의 문서를 확인할 수 있습니다. 프론트엔드 팀은 점진적으로 새 버전으로 마이그레이션할 수 있습니다.
+
+## 실전 적용 팁
+
+실제 프로젝트에서 Django-Ninja를 도입할 때 유용한 팁들을 공유합니다.
+
+### 1. 개발 환경에서만 문서 제공하기
+
+프로덕션에서는 보안상 API 문서를 비활성화하는 것이 좋습니다:
+
+```python
+from django.conf import settings
+
+api = NinjaAPI(
+    title="My API",
+    version="1.0.0",
+    docs_url="/docs" if settings.DEBUG else None,  # 프로덕션에서는 None
+)
+```
+
+또는 인증된 사용자만 접근하도록 제한할 수 있습니다:
+
+```python
+from ninja import NinjaAPI
+from ninja.security import django_auth
+
+api = NinjaAPI(
+    title="My API",
+    version="1.0.0",
+    docs_decorator=lambda func: django_auth(func),  # 로그인 필요
+)
+```
+
+### 2. CI/CD에 문서 검증 추가하기
+
+OpenAPI 스펙을 검증하는 단계를 CI에 추가하면 문서 품질을 유지할 수 있습니다:
+
+```yaml
+# .github/workflows/api-docs.yml
+name: API Documentation
+
+on: [pull_request]
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install django-ninja openapi-spec-validator
+      
+      - name: Generate OpenAPI schema
+        run: |
+          python manage.py generate_openapi_schema > openapi.json
+      
+      - name: Validate OpenAPI schema
+        run: |
+          openapi-spec-validator openapi.json
+      
+      - name: Check for breaking changes
+        run: |
+          # 이전 버전과 비교해 breaking changes 검사
+          python scripts/check_api_changes.py
+```
+
+### 3. 프론트엔드 팀과의 협업 워크플로우
+
+실제로 효과적이었던 협업 방법입니다:
+
+1. **API 설계 먼저**: 기능 개발 전에 스키마와 엔드포인트를 먼저 정의하고 PR을 올립니다.
+2. **문서 리뷰**: 프론트엔드 개발자가 `/api/docs`를 확인하고 피드백을 남깁니다.
+3. **Mock 데이터**: 백엔드 구현 전에 프론트엔드는 스키마 기반으로 mock 데이터를 만들어 개발을 시작합니다.
+4. **병렬 개발**: 백엔드와 프론트엔드가 동시에 개발하고, 완성되면 통합합니다.
+5. **자동 테스트**: 스키마 기반으로 E2E 테스트를 작성합니다.
+
+```python
+# 개발 초기 단계: 구현 전에 스키마와 엔드포인트만 정의
+@router.post("/posts", response=PostSchema)
+def create_post(request, payload: PostCreateSchema):
+    """
+    TODO: 실제 구현 필요
+    
+    현재는 mock 데이터를 반환합니다.
+    """
+    return {
+        "id": 999,
+        "title": payload.title,
+        "content": payload.content,
+        "author": "mock_user",
+        "created_at": "2026-01-18T10:00:00Z",
+        "tags": payload.tags,
+        "is_published": False
+    }
+```
+
+### 4. 문서 스타일 커스터마이징
+
+Swagger UI의 스타일을 커스터마이징할 수 있습니다:
+
+```python
+api = NinjaAPI(
+    title="My API",
+    version="1.0.0",
+    docs_url="/docs",
+    openapi_extra={
+        "info": {
+            "x-logo": {
+                "url": "https://example.com/logo.png",
+                "altText": "My Company Logo"
+            },
+            "contact": {
+                "name": "Backend Team",
+                "email": "backend@example.com",
+                "url": "https://example.com/support"
+            },
+            "license": {
+                "name": "MIT",
+                "url": "https://opensource.org/licenses/MIT"
+            }
+        }
+    }
+)
+```
+
+### 5. 에러 처리 표준화하기
+
+모든 에러를 일관된 형식으로 반환하면 프론트엔드에서 처리하기 쉽습니다:
+
+```python
+from ninja import NinjaAPI
+from ninja.errors import ValidationError
+
+class APIError(Schema):
+    error: str
+    detail: str
+    code: str
+
+@api.exception_handler(ValidationError)
+def validation_error_handler(request, exc):
+    return api.create_response(
+        request,
+        {"error": "Validation Error", "detail": str(exc), "code": "VALIDATION_ERROR"},
+        status=400,
+    )
+
+@api.exception_handler(Exception)
+def general_exception_handler(request, exc):
+    return api.create_response(
+        request,
+        {"error": "Internal Server Error", "detail": "An unexpected error occurred", "code": "INTERNAL_ERROR"},
+        status=500,
+    )
+```
+
+## 결론
+
+Django-Ninja의 자동 문서화 기능은 단순히 문서를 생성하는 것을 넘어, **프론트엔드와 백엔드 간의 계약(Contract)**을 코드로 정의하는 것입니다. 코드가 곧 문서이므로 문서가 오래되거나 잘못될 일이 없고, 타입 안정성을 확보할 수 있으며, 협업 비용을 크게 줄일 수 있습니다.
+
+핵심은 다음과 같습니다:
+
+1. **명확한 스키마 설계**: Field 설명, 예시, 검증 규칙을 충실히 작성하세요.
+2. **일관된 패턴**: 페이지네이션, 에러 응답, 인증 등을 일관되게 유지하세요.
+3. **프론트엔드 관점**: TypeScript 타입 생성, 환경별 URL, 변경 이력 등을 제공하세요.
+4. **지속적인 개선**: CI/CD에 문서 검증을 추가하고, 프론트엔드 피드백을 반영하세요.
+
+API 문서화는 한 번 설정하면 끝나는 것이 아니라, 프로젝트 전체의 개발 경험을 향상시키는 지속적인 투자입니다. Django-Ninja를 활용하면 이 투자를 최소한의 노력으로 최대한의 효과를 낼 수 있습니다.
+
+프론트엔드 개발자로부터 "API 문서가 정말 잘 되어 있어서 개발이 편했어요"라는 말을 들을 수 있을 것입니다. 그것이야말로 좋은 백엔드 시스템의 증거입니다.
+
+---
+
+**참고 자료**:
+- [Django-Ninja 공식 문서](https://django-ninja.dev/)
+- [OpenAPI Specification](https://swagger.io/specification/)
+- [openapi-typescript](https://github.com/drwpow/openapi-typescript)
+
