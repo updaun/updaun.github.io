@@ -5,6 +5,7 @@ date: 2026-01-18 10:00:00 +0900
 categories: [Python, Django, API]
 tags: [django-ninja, api-documentation, openapi, swagger, frontend-collaboration, python]
 description: "Django-Ninja의 자동 문서화 기능을 활용해 프론트엔드 개발자와의 협업을 극대화하는 전략과 실전 코드 예시를 소개합니다."
+image: "/assets/img/posts/2026-01-18-django-ninja-api-documentation-automation.webp"
 ---
 
 ## 목차
