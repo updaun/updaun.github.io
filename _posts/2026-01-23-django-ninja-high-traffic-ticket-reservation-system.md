@@ -4,6 +4,7 @@ title: "Django Ninja로 구현하는 대규모 공연 티켓 예매 시스템"
 date: 2026-01-23
 categories: [Django, Backend, Architecture]
 tags: [django-ninja, redis, celery, concurrency, high-traffic, ticket-reservation]
+image: "/assets/img/posts/2026-01-23-django-ninja-high-traffic-ticket-reservation-system.webp"
 ---
 
 ## 서론: 티켓 예매 시스템의 도전과제
