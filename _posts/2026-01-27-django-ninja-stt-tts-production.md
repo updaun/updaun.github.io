@@ -4,6 +4,7 @@ title: "Django Ninja로 STT/TTS 파이프라인 구축 - 실서비스 아키텍�
 date: 2026-01-27
 categories: django
 author: updaun
+image: "/assets/img/posts/2026-01-27-django-ninja-stt-tts-production.webp"
 ---
 
 # Django Ninja로 STT/TTS 파이프라인 구축 - 실서비스 아키텍처와 코드 예시
