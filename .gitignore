@@ -82,3 +82,6 @@ __pycache__/
 *.json
 
 examples/
+
+# MACOS system files
+.DS_Store
