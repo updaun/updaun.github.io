@@ -950,3 +950,387 @@ LOGGING = {
 
 이렇게 구조화된 로깅을 사용하면 ELK 스택이나 CloudWatch로 쉽게 분석할 수 있습니다.
 
+## Docker 배포와 멀티 스테이지 빌드
+
+Hugging Face 모델을 포함한 Docker 이미지는 수 GB에 달할 수 있으므로, 효율적인 빌드 전략이 필요합니다.
+
+```dockerfile
+# Dockerfile
+FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04 AS base
+
+# Python 설치
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 의존성만 먼저 설치 (캐시 활용)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 모델 사전 다운로드 (이미지 빌드 시)
+FROM base AS model-download
+RUN python3 -c "from transformers import pipeline; \
+    pipeline('sentiment-analysis', model='distilbert-base-uncased-finetuned-sst-2-english'); \
+    pipeline('text-generation', model='gpt2');"
+
+# 최종 이미지
+FROM base AS final
+COPY --from=model-download /root/.cache/huggingface /root/.cache/huggingface
+COPY . .
+
+# 환경 변수
+ENV PYTHONUNBUFFERED=1
+ENV HF_HOME=/root/.cache/huggingface
+ENV DJANGO_SETTINGS_MODULE=config.settings
+
+# 포트 노출
+EXPOSE 8000
+
+# 헬스체크
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python3 -c "import requests; requests.get('http://localhost:8000/api/ai/health')"
+
+# 실행
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120"]
+```
+
+Docker Compose로 전체 스택을 구성합니다.
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ai_db
+      POSTGRES_USER: ai_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_user"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build: .
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120
+    volumes:
+      - .:/app
+      - model_cache:/root/.cache/huggingface
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://ai_user:${DB_PASSWORD}@db:5432/ai_db
+      - REDIS_URL=redis://redis:6379/0
+      - HF_DEVICE=cuda:0
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  celery:
+    build: .
+    command: celery -A config worker --loglevel=info --concurrency=1
+    volumes:
+      - .:/app
+      - model_cache:/root/.cache/huggingface
+    environment:
+      - DATABASE_URL=postgresql://ai_user:${DB_PASSWORD}@db:5432/ai_db
+      - REDIS_URL=redis://redis:6379/0
+      - HF_DEVICE=cuda:0
+    depends_on:
+      - redis
+      - db
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  celery-beat:
+    build: .
+    command: celery -A config beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+
+volumes:
+  redis_data:
+  postgres_data:
+  model_cache:  # 모델 캐시 영구 저장
+```
+
+배포 명령:
+
+```bash
+# 이미지 빌드 (모델 사전 다운로드 포함)
+docker-compose build
+
+# 서비스 시작
+docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f web
+
+# GPU 사용 확인
+docker exec -it <container_id> nvidia-smi
+```
+
+## 프로덕션 체크리스트와 보안 고려사항
+
+프로덕션 배포 전 다음 사항을 확인해야 합니다.
+
+### 1. 성능 및 스케일링
+- [ ] GPU 메모리 프로파일링 완료 (nvidia-smi, torch.cuda.memory_summary())
+- [ ] 동시 요청 처리 테스트 (Locust, JMeter 등)
+- [ ] Celery 워커 개수 최적화 (CPU: 2n+1, GPU: 1~2개)
+- [ ] 모델 캐시 볼륨 마운트 확인
+- [ ] Rate Limiting 설정 (Django Ratelimit 또는 Nginx)
+
+```python
+# settings.py에 추가
+# pip install django-ratelimit
+from django_ratelimit.decorators import ratelimit
+
+@ratelimit(key='ip', rate='100/h', method='POST')
+@router.post("/sentiment")
+def analyze_sentiment(request, data: SentimentRequest):
+    # ...
+```
+
+### 2. 보안
+- [ ] API 키 인증 구현 (JWT 또는 API Key)
+- [ ] HTTPS 설정 (Let's Encrypt, Nginx 리버스 프록시)
+- [ ] CORS 정책 설정
+- [ ] 입력 검증 및 SQL Injection 방지
+- [ ] Rate Limiting으로 DDoS 방지
+
+```python
+# ai/authentication.py
+from ninja.security import HttpBearer
+from django.conf import settings
+
+class ApiKeyAuth(HttpBearer):
+    def authenticate(self, request, token):
+        if token == settings.API_SECRET_KEY:
+            return token
+        return None
+
+# API에 적용
+api = NinjaAPI(auth=ApiKeyAuth())
+```
+
+### 3. 모니터링 및 알림
+- [ ] Prometheus + Grafana 대시보드 구성
+- [ ] Sentry로 에러 트래킹
+- [ ] CloudWatch/ELK로 로그 집계
+- [ ] GPU 메모리 부족 시 알림 설정
+- [ ] 응답 시간 95 percentile 모니터링
+
+### 4. 비용 최적화
+- [ ] 사용하지 않는 모델은 언로드
+- [ ] 캐싱으로 중복 계산 방지 (Redis TTL 설정)
+- [ ] AWS Spot Instance 또는 Preemptible VM 활용
+- [ ] 모델 양자화 적용 (FP16, INT8)
+
+### 5. 백업 및 복구
+- [ ] 모델 파일 백업 (S3, GCS 등)
+- [ ] 데이터베이스 정기 백업
+- [ ] Docker 이미지 버전 관리
+- [ ] 롤백 계획 수립
+
+이 체크리스트를 모두 완료하면 안정적이고 확장 가능한 AI API 서비스를 운영할 수 있습니다.
+
+## 실전 예제: 고객 리뷰 분석 시스템
+
+이제 배운 내용을 종합해서 실제 서비스를 구축해봅니다. 고객 리뷰를 받아 감정을 분석하고, 부정 리뷰는 요약해서 알림을 보내는 시스템입니다.
+
+```python
+# ai/services.py
+from .model_manager import model_manager
+from .tasks import async_summarization
+from django.core.cache import cache
+import logging
+
+logger = logging.getLogger(__name__)
+
+class ReviewAnalysisService:
+    """고객 리뷰 분석 서비스"""
+    
+    @staticmethod
+    def analyze_review(review_text: str, review_id: int):
+        """리뷰 감정 분석 및 처리"""
+        # 1. 감정 분석
+        sentiment_pipeline = model_manager.get_sentiment_pipeline()
+        sentiment = sentiment_pipeline(review_text)[0]
+        
+        logger.info(f"Review {review_id} analyzed: {sentiment['label']} ({sentiment['score']:.2f})")
+        
+        # 2. 부정 리뷰이고 긴 경우 요약
+        if sentiment['label'] == 'NEGATIVE' and len(review_text) > 200:
+            summary_task = async_summarization.delay(review_text, max_length=50)
+            logger.info(f"Summarization task created: {summary_task.id}")
+            return {
+                "review_id": review_id,
+                "sentiment": sentiment['label'],
+                "score": sentiment['score'],
+                "summary_job_id": summary_task.id,
+                "requires_attention": True
+            }
+        
+        return {
+            "review_id": review_id,
+            "sentiment": sentiment['label'],
+            "score": sentiment['score'],
+            "requires_attention": sentiment['label'] == 'NEGATIVE'
+        }
+    
+    @staticmethod
+    def batch_analyze_reviews(reviews: list):
+        """여러 리뷰를 배치로 분석"""
+        texts = [r['text'] for r in reviews]
+        pipeline = model_manager.get_sentiment_pipeline()
+        results = pipeline(texts)
+        
+        analyzed = []
+        for review, sentiment in zip(reviews, results):
+            analyzed.append({
+                "review_id": review['id'],
+                "text": review['text'][:100] + "...",
+                "sentiment": sentiment['label'],
+                "score": sentiment['score']
+            })
+        
+        # 통계 계산
+        negative_count = sum(1 for r in results if r['label'] == 'NEGATIVE')
+        positive_count = len(results) - negative_count
+        
+        return {
+            "total": len(reviews),
+            "positive": positive_count,
+            "negative": negative_count,
+            "negative_rate": negative_count / len(reviews) if reviews else 0,
+            "reviews": analyzed
+        }
+
+# API 엔드포인트
+from .services import ReviewAnalysisService
+from ninja import Schema
+
+class ReviewRequest(Schema):
+    review_id: int
+    text: str
+
+class BatchReviewRequest(Schema):
+    reviews: list
+
+@router.post("/reviews/analyze")
+def analyze_review(request, data: ReviewRequest):
+    """개별 리뷰 분석"""
+    result = ReviewAnalysisService.analyze_review(data.text, data.review_id)
+    return result
+
+@router.post("/reviews/batch-analyze")
+def batch_analyze_reviews(request, data: BatchReviewRequest):
+    """배치 리뷰 분석"""
+    result = ReviewAnalysisService.batch_analyze_reviews(data.reviews)
+    return result
+```
+
+프론트엔드 연동 예제 (JavaScript):
+
+```javascript
+// 개별 리뷰 분석
+async function analyzeReview(reviewId, text) {
+    const response = await fetch('http://localhost:8000/api/ai/reviews/analyze', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer YOUR_API_KEY'
+        },
+        body: JSON.stringify({
+            review_id: reviewId,
+            text: text
+        })
+    });
+    
+    const result = await response.json();
+    
+    if (result.requires_attention) {
+        // 관리자에게 알림
+        console.log(`⚠️ Negative review detected: ${reviewId}`);
+        if (result.summary_job_id) {
+            // 요약 결과 폴링
+            pollSummary(result.summary_job_id);
+        }
+    }
+    
+    return result;
+}
+
+// 배치 분석
+async function analyzeBatchReviews(reviews) {
+    const response = await fetch('http://localhost:8000/api/ai/reviews/batch-analyze', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer YOUR_API_KEY'
+        },
+        body: JSON.stringify({ reviews })
+    });
+    
+    const result = await response.json();
+    console.log(`Negative rate: ${(result.negative_rate * 100).toFixed(1)}%`);
+    
+    return result;
+}
+
+// 예시 사용
+const reviews = [
+    { id: 1, text: "Great product! Love it!" },
+    { id: 2, text: "Terrible quality, broke after one day. Very disappointed with the customer service." },
+    { id: 3, text: "Average, nothing special" }
+];
+
+analyzeBatchReviews(reviews);
+```
+
+이 예제는 실제 이커머스나 SaaS 서비스에서 고객 피드백을 자동으로 분류하고 우선순위를 매기는 데 사용할 수 있습니다.
+
+## 마치며
+
+이 글에서는 Django Ninja와 Hugging Face Transformers를 통합해 비용 제로로 운영 가능한 AI API를 구축하는 전 과정을 다뤘습니다. OpenAI나 Claude 같은 클라우드 서비스에 비해 초기 설정이 복잡하지만, 한번 구축하면 무제한으로 사용할 수 있고, 데이터가 외부로 나가지 않으며, 네트워크 장애에도 영향받지 않는다는 장점이 있습니다. 특히 감정 분석, 분류, 번역처럼 명확한 작업에서는 경량 모델로도 충분한 정확도를 달성할 수 있어 실용적입니다. GPU가 없는 환경이라면 CPU 최적화 기법(양자화, 배치 처리, TorchScript)을 적극 활용하고, GPU가 있다면 여러 모델을 메모리에 올려두고 병렬로 서비스할 수 있습니다. Celery를 통한 비동기 처리와 Redis 캐싱을 결합하면 수백~수천 명의 동시 사용자를 처리할 수 있는 확장 가능한 시스템을 만들 수 있습니다. 프로덕션 배포 시에는 모니터링·에러 트래킹·보안 설정을 빠뜨리지 말고, GPU 메모리 프로파일링을 통해 적절한 워커 수를 설정해야 합니다. Hugging Face Hub에는 계속해서 새로운 모델이 공개되므로, 작업에 맞는 최신 모델을 찾아 교체하면 성능을 지속적으로 개선할 수 있습니다. 이 가이드를 기반으로 챗봇, 문서 분석, 추천 시스템 등 다양한 AI 서비스를 직접 구축해보시기 바랍니다.
+
