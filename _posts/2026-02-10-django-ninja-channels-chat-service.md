@@ -4,6 +4,7 @@ title: "Django-Ninja와 Channels로 KakaoTalk 같은 채팅 서비스 만들기:
 date: 2026-02-10 10:00:00 +0900
 categories: [Django, Python, Real-time, WebSocket, Backend Architecture]
 tags: [Django, Channels, Django-Ninja, WebSocket, Real-time Chat, Message Queue, UX, Backend, Async, Python]
+image: "/assets/img/posts/2026-02-10-django-ninja-channels-chat-service.webp"
 ---
 
 KakaoTalk이나 Slack 같은 채팅 애플리케이션을 보면 마치 마법처럼 메시지가 순식간에 전달되고, 타이핑 중임이 표시되며, 예기치 않은 네트워크 끊김에도 자동으로 복구됩니다. 이런 경험을 제공하기 위해서는 단순한 REST API만으로는 부족합니다. 이 글에서는 Django 에코시스템의 강력한 도구들인 **Django-Ninja**와 **Channels**를 활용하여 프로덕션급 채팅 서비스를 어떻게 구축하는지, 그리고 사용자 경험을 어떻게 최적화하는지 자세히 살펴보겠습니다.
