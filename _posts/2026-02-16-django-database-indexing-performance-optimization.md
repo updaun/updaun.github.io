@@ -6,6 +6,7 @@ date: 2026-02-16 09:00:00 +0000
 categories: [Django, Database, Performance]
 tags: [django, database, indexing, optimization, performance, sql]
 description: "Django 프로젝트에서 데이터베이스 인덱싱을 올바르게 활용하는 방법을 배웁니다. 개념부터 실전 성능 비교까지 다양한 예시로 알아봅니다."
+image: "/assets/img/posts/2026-02-16-django-database-indexing-performance-optimization.webp"
 ---
 
 ## 들어가며
