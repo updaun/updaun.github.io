@@ -5,6 +5,7 @@ description: "WSL Ubuntu와 AWS에서 Local LLM(Large Language Model)을 구현�
 date: 2026-02-19
 categories: [AI, LLM, Infrastructure]
 tags: [llm, ollama, local-deployment, aws-ec2, wsl, ubuntu]
+image: "/assets/img/posts/2026-02-19-local-llm-implementation-guide.webp"
 ---
 
 ## 목차
