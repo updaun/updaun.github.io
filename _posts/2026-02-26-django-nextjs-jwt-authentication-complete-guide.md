@@ -4,6 +4,7 @@ title: "Django & Next.js JWT 인증 완벽 가이드: Access/Refresh 토큰 관�
 date: 2026-02-26 10:00:00 +0900
 categories: [Django, Next.js, Security]
 tags: [Django, Next.js, JWT, Authentication, Authorization, Security, Cookie, Token, REST API]
+image: "/assets/img/posts/2026-02-26-django-nextjs-jwt-authentication-complete-guide.webp"
 ---
 
 JWT(JSON Web Token)는 현대 웹 애플리케이션에서 가장 널리 사용되는 인증 방식입니다. 이 글에서는 Django 백엔드와 Next.js 프론트엔드 환경에서 JWT를 활용한 인증/인가 시스템을 구축하고, 실무에서 마주하는 다양한 환경(개발/스테이징/프로덕션)과 플랫폼(웹/모바일웹/앱)에서 안전하게 토큰을 관리하는 방법을 상세히 다룹니다.
