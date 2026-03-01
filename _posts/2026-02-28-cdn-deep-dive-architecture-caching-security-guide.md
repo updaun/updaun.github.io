@@ -4,6 +4,7 @@ title: "CDN 완전 정복: 아키텍처, 캐싱 전략, 보안, 비용 최적화
 date: 2026-02-28 09:30:00 +0900
 categories: [Web, Infra, Performance]
 tags: [CDN, Caching, Edge, CloudFront, Cloudflare, Performance, Security, DevOps]
+image: "/assets/img/posts/2026-02-28-cdn-deep-dive-architecture-caching-security-guide.webp"
 ---
 
 CDN(Content Delivery Network)은 "정적 파일을 빠르게 전달하는 기술"로만 이해하면 절반만 이해한 것입니다. 실무에서 CDN은 지연 시간(latency) 개선뿐 아니라 트래픽 급증 대응, 오리진 보호, 비용 제어, 보안 계층 강화까지 담당하는 핵심 인프라로 동작합니다. 이 글에서는 CDN의 기본 원리부터 캐시 키 설계, 무효화 전략, 동적 콘텐츠 처리, 보안 설정, 모니터링과 운영 체크리스트까지 한 번에 정리합니다.
