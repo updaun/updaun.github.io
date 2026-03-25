@@ -142,6 +142,7 @@ defaults:
       share: true
       related: true
       toc: true
+      render_with_liquid: false
       sidebar:
         nav: "docs"
   
