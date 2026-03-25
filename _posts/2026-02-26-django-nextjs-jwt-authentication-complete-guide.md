@@ -2,6 +2,7 @@
 layout: post
 title: "Django & Next.js JWT 인증 완벽 가이드: Access/Refresh 토큰 관리부터 보안까지"
 date: 2026-02-26 10:00:00 +0900
+render_with_liquid: false
 categories: [Django, Next.js, Security]
 tags: [Django, Next.js, JWT, Authentication, Authorization, Security, Cookie, Token, REST API]
 image: "/assets/img/posts/2026-02-26-django-nextjs-jwt-authentication-complete-guide.webp"

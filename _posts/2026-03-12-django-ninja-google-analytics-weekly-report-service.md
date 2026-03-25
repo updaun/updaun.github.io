@@ -2,6 +2,7 @@
 layout: post
 title: "Django Ninja로 Google Analytics 주간 성과 분석 서비스 만들기"
 date: 2026-03-12 10:00:00 +0900
+render_with_liquid: false
 categories: [Django, Python, API, Analytics]
 tags: [Django Ninja, Google Analytics, API, Data Analysis, Backend, Python, Weekly Report, Business Intelligence]
 image: "/assets/img/posts/2026-03-12-django-ninja-google-analytics-weekly-report-service.webp"

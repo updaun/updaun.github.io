@@ -2,6 +2,7 @@
 layout: post
 title: "Vercel에서 Next.js 정적 사이트 배포 완벽 가이드 - Static Export와 AWS 성능 비교"
 date: 2026-03-18 10:00:00 +0900
+render_with_liquid: false
 categories: [Web Development, Next.js, Deployment, Performance]
 tags: [Vercel, Next.js, Static Export, SSG, Deployment, AWS, CloudFront, S3, Performance, CDN]
 image: "/assets/img/posts/2026-03-18-vercel-nextjs-static-site-deployment-guide.webp"
