@@ -5,6 +5,7 @@ date: 2026-03-30
 categories: ai-productivity
 tags: [gstack, claude-code, codex, ai-agent, developer-productivity]
 author: updaun
+image: "/assets/img/posts/2026-03-30-gstack-practical-guide.webp"
 render_with_liquid: false
 ---
 
