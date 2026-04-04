@@ -5,6 +5,7 @@ date: 2026-04-03 10:00:00 +0900
 categories: [AI, Computer Vision, Anomaly Detection, Deep Learning]
 tags: [anomaly-detection, image-processing, autoencoder, PatchCore, PaDiM, AUROC, pytorch, computer-vision, unsupervised-learning]
 description: "이미지 이상 감지(Image Anomaly Detection)의 전 과정을 다룹니다. 데이터 수집과 전처리부터 모델 학습, 실서비스 추론, 성능 최적화 및 평가 방법까지 실용적인 코드와 함께 완전히 설명합니다."
+image: "/assets/img/posts/2026-04-03-image-anomaly-detection-comprehensive-guide.webp"
 ---
 
 ## 📌 이미지 이상 감지란?
