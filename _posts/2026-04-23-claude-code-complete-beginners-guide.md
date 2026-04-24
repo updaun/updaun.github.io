@@ -4,6 +4,7 @@ title: "Claude Code 완전 입문 가이드 - 설치부터 실전 사용까지"
 date: 2026-04-23
 categories: ai-tools
 author: updaun
+image: "/assets/img/posts/2026-04-23-claude-code-complete-beginners-guide.webp"
 ---
 
 # Claude Code 완전 입문 가이드 - 설치부터 실전 사용까지
