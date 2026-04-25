@@ -15,6 +15,7 @@ meta:
   type: "website"
 url: "https://updaun.github.io"
 baseurl: ""
+image_cdn_base: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev"
 
 # 작성자 정보
 author:

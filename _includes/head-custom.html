@@ -35,7 +35,9 @@
 <meta property="og:title" content="{{ page.title | default: site.seo.headline | default: site.title }}">
 <meta property="og:description" content="{{ page.excerpt | default: site.seo.description | default: site.description | strip_html | strip_newlines | truncate: 120 }}">
 <meta property="og:url" content="{{ page.url | absolute_url | default: site.url }}">
-<meta property="og:image" content="{% if page.image %}{{ page.image | absolute_url }}{% elsif site.og.image %}{{ site.og.image | absolute_url }}{% else %}{{ site.seo.image | default: '/assets/img/seo-image.png' | absolute_url }}{% endif %}">
+{% assign _og_img = page.image | default: site.og.image | default: site.seo.image | default: '/assets/img/seo-image.png' %}
+{% if _og_img contains 'http' %}{% assign _og_img_url = _og_img %}{% else %}{% assign _og_img_url = _og_img | prepend: site.image_cdn_base %}{% endif %}
+<meta property="og:image" content="{{ _og_img_url }}">
 <meta property="og:site_name" content="{{ site.og.site_name | default: site.title }}">
 <meta property="og:locale" content="{{ site.og.locale | default: 'ko_KR' }}">
 
@@ -70,6 +72,8 @@
 {% endif %}
 
 <!-- 프리로드 및 성능 최적화 -->
+<link rel="preconnect" href="https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev">
+<link rel="dns-prefetch" href="//pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://pagead2.googlesyndication.com">

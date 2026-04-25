@@ -230,3 +230,39 @@ chmod +x *.py
 - 🎯 **스마트 크롭**: 비율 유지하며 중앙 크롭
 
 이제 `.env` 파일로 모든 설정을 안전하고 편리하게 관리할 수 있습니다! 🎉
+
+## ☁️ Cloudflare R2 업로드 (Python)
+
+이미지 파일을 Cloudflare R2에 업로드해 CDN으로 서빙하려면 아래 순서로 실행하세요.
+
+### 1) 의존성 설치
+```bash
+pip install boto3
+```
+
+### 2) .env 설정
+```env
+CF_R2_ACCOUNT_ID=your_cloudflare_account_id_here
+CF_R2_ACCESS_KEY_ID=your_r2_access_key_id_here
+CF_R2_SECRET_ACCESS_KEY=your_r2_secret_access_key_here
+CF_R2_BUCKET=your_r2_bucket_name_here
+```
+
+### 3) 업로드 실행
+```bash
+# 기본: assets/img -> assets/img 경로로 업로드
+python3 upload_to_r2.py
+
+# 실제 업로드 없이 대상만 확인
+python3 upload_to_r2.py --dry-run
+
+# 특정 경로 업로드
+python3 upload_to_r2.py --source-dir assets/img/posts --key-prefix assets/img/posts
+```
+
+### 4) 캐시 정책 커스텀
+```bash
+python3 upload_to_r2.py --cache-control "public, max-age=86400"
+```
+
+기본 캐시 헤더는 `public, max-age=31536000, immutable` 입니다.

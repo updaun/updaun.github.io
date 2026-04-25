@@ -83,5 +83,10 @@ __pycache__/
 
 examples/
 
+# 이미지 (R2 CDN으로 서빙, git에서 제외)
+assets/img/posts/
+assets/images/
+downloaded_images/
+
 # MACOS system files
 .DS_Store

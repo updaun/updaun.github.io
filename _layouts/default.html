@@ -6,6 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
+    <!-- 커스텀 헤드 (CDN og:image가 seo 태그보다 앞에 위치해야 소셜 크롤러 우선 적용) -->
+    {% include head-custom.html %}
+
     <!-- SEO 메타 태그 -->
     {% seo %}
     
@@ -28,8 +31,7 @@
     <!-- RSS 피드 -->
     <link rel="alternate" type="application/rss+xml" title="{{ site.title | escape }}" href="{{ '/feed.xml' | relative_url }}">
     
-    <!-- 커스텀 헤드 -->
-    {% include head-custom.html %}
+    <!-- 커스텀 헤드 (위에서 이미 include됨) -->
     
     <!-- 구글 애드센스 -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2175298456730584" crossorigin="anonymous"></script>
@@ -44,7 +46,7 @@
         "description": {{ page.excerpt | strip_html | strip_newlines | truncate: 160 | jsonify }},
         "image": {
             "@type": "ImageObject",
-            "url": "{% if page.image %}{{ page.image | absolute_url }}{% else %}{{ site.seo.image | default: '/assets/img/seo-image.png' | absolute_url }}{% endif %}",
+            "url": "{% assign _jld_img = page.image | default: site.seo.image | default: '/assets/img/seo-image.png' %}{% if _jld_img contains 'http' %}{{ _jld_img }}{% else %}{{ _jld_img | prepend: site.image_cdn_base }}{% endif %}",
             "width": 1200,
             "height": 630
         },
@@ -94,7 +96,7 @@
         "name": "{{ site.title }}",
         "description": "{{ site.description }}",
         "url": "{{ site.url }}",
-        "image": "{{ site.seo.image | default: '/assets/img/seo-image.png' | absolute_url }}",
+        "image": "{{ site.seo.image | default: '/assets/img/seo-image.png' | prepend: site.image_cdn_base }}",
         "author": {
             "@type": "Person",
             "name": "{{ site.author.name }}",
