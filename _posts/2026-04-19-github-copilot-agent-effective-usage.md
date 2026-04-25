@@ -3,7 +3,7 @@ title: "GitHub Copilot Agent 모드 완전 정복: 생산성 10배 높이는 실
 date: 2026-04-19 09:00:00 +0900
 categories: [개발도구, AI, 생산성]
 tags: [GitHub Copilot, AI Agent, 개발 생산성, VSCode, 코딩 효율화]
-image: "/assets/img/posts/2026-04-19-github-copilot-agent-effective-usage.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-04-19-github-copilot-agent-effective-usage.webp"
 ---
 
 ## 개요

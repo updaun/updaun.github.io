@@ -4,7 +4,7 @@ title: "AWS RDS에서 Neon으로 PostgreSQL 마이그레이션 완벽 가이드"
 date: 2025-07-29 10:00:00 +0900
 categories: [Database, Migration, PostgreSQL]
 tags: [Neon, AWS RDS, PostgreSQL, Migration, LogicalReplication, Database, 데이터베이스, 마이그레이션, 넥온]
-image: "/assets/img/posts/2025-07-29-aws-rds-to-neon-migration-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-07-29-aws-rds-to-neon-migration-guide.webp"
 ---
 
 **Neon**은 현대적인 서버리스 PostgreSQL 플랫폼으로, **자동 스케일링**, **브랜치 기능**, **더 저렴한 비용** 등의 장점을 제공합니다. 이 글에서는 **AWS RDS PostgreSQL에서 Neon으로 안전하게 마이그레이션하는 전체 과정**을 논리적 복제(Logical Replication)를 활용해 단계별로 설명하겠습니다.

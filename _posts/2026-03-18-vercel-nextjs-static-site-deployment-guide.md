@@ -5,7 +5,7 @@ date: 2026-03-18 10:00:00 +0900
 render_with_liquid: false
 categories: [Web Development, Next.js, Deployment, Performance]
 tags: [Vercel, Next.js, Static Export, SSG, Deployment, AWS, CloudFront, S3, Performance, CDN]
-image: "/assets/img/posts/2026-03-18-vercel-nextjs-static-site-deployment-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-03-18-vercel-nextjs-static-site-deployment-guide.webp"
 ---
 
 Next.js는 다양한 렌더링 방식을 지원하지만, 그 중에서도 **정적 사이트 생성(Static Site Generation, SSG)**은 최고의 성능과 안정성을 제공합니다. 이번 포스트에서는 Vercel을 이용한 Next.js 정적 사이트 배포 방법을 상세히 다루고, AWS S3 + CloudFront와의 성능 비교를 통해 한국 시장에서의 최적 선택을 분석해보겠습니다.

@@ -5,7 +5,7 @@ date: 2025-10-08 10:00:00 +0900
 categories: [FastAPI, LangChain, LLM, Computer-Vision]
 tags: [FastAPI, LangChain, OpenAI, GPT-4V, Vision, API-Design, Python, Machine-Learning]
 author: "updaun"
-image: "/assets/img/posts/2025-10-08-fastapi-langchain-llm-image-api-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-08-fastapi-langchain-llm-image-api-guide.webp"
 ---
 
 멀티모달 AI의 발전으로 이미지를 이해하고 분석할 수 있는 LLM이 등장했습니다. 이 글에서는 FastAPI와 LangChain을 활용하여 이미지에 대해 질문하고 답변을 받을 수 있는 강력한 API를 단계별로 구축하는 방법을 알아보겠습니다.

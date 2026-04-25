@@ -5,7 +5,7 @@ date: 2026-03-12 10:00:00 +0900
 render_with_liquid: false
 categories: [Django, Python, API, Analytics]
 tags: [Django Ninja, Google Analytics, API, Data Analysis, Backend, Python, Weekly Report, Business Intelligence]
-image: "/assets/img/posts/2026-03-12-django-ninja-google-analytics-weekly-report-service.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-03-12-django-ninja-google-analytics-weekly-report-service.webp"
 ---
 
 웹사이트나 앱을 운영하다 보면 데이터 기반의 의사결정이 필수입니다. Google Analytics는 풍부한 사용자 데이터를 제공하지만, 매주 대시보드에 접속해서 데이터를 확인하고 비교하는 것은 번거로운 일입니다. 이 글에서는 Django Ninja를 활용하여 Google Analytics 데이터를 자동으로 수집하고, 지난주와 이번주의 성과를 비교하는 보고서를 생성하는 서비스를 구축하는 과정을 단계별로 살펴보겠습니다.

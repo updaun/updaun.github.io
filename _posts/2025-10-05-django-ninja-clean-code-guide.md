@@ -5,7 +5,7 @@ date: 2025-10-05 10:00:00 +0900
 categories: [Django, Python, Clean Code, Architecture]
 tags: [Django, Python, Django-Ninja, Clean-Code, Architecture, API-Design, Best-Practices, SOLID]
 author: "updaun"
-image: "/assets/img/posts/2025-10-05-django-ninja-clean-code-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-05-django-ninja-clean-code-guide.webp"
 ---
 
 Django Ninja를 사용하면서 단순히 동작하는 코드가 아닌, 아름답고 유지보수 가능한 코드를 작성하는 것은 장기적으로 프로젝트의 성공을 좌우합니다. 이 글에서는 Django Ninja의 특성을 활용하여 세련되고 클린한 API를 설계하는 방법을 상세히 알아보겠습니다.

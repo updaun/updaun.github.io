@@ -4,7 +4,7 @@ title: "Django Ninja와 Hugging Face 모델 통합 - 로컬 LLM으로 비용 제
 date: 2026-01-31
 categories: django
 author: updaun
-image: "/assets/img/posts/2026-01-31-django-ninja-huggingface-integration-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-01-31-django-ninja-huggingface-integration-guide.webp"
 ---
 
 # Django Ninja와 Hugging Face 모델 통합 - 로컬 LLM으로 비용 제로 AI API 구축하기

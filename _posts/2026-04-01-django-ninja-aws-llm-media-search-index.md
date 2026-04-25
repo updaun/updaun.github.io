@@ -5,7 +5,7 @@ date: 2026-04-01
 categories: backend
 tags: [django-ninja, aws, s3, llm, search, opensearch, python, fastapi-style]
 author: updaun
-image: "/assets/img/posts/2026-04-01-django-ninja-aws-llm-media-search-index.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-04-01-django-ninja-aws-llm-media-search-index.webp"
 render_with_liquid: false
 ---
 

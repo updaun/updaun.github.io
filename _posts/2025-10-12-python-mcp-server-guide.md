@@ -5,7 +5,7 @@ date: 2025-10-12 10:00:00 +0900
 categories: [Python, AI, MCP]
 tags: [MCP, Model Context Protocol, Python, AI, LLM, FastMCP, Claude, ChatGPT, API, Protocol]
 author: "updaun"
-image: "/assets/img/posts/2025-10-12-python-mcp-server-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-12-python-mcp-server-guide.webp"
 ---
 
 Model Context Protocol(MCP)은 Anthropic에서 개발한 오픈 프로토콜로, LLM 애플리케이션과 외부 데이터 소스 및 도구를 원활하게 연결하는 표준화된 방법을 제공합니다. 이 글에서는 MCP가 무엇인지, 어떤 용도로 활용되는지 알아보고, Python을 사용하여 실제 MCP 서버를 구축하는 방법을 단계별로 설명합니다.

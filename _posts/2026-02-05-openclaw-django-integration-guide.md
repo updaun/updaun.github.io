@@ -4,7 +4,7 @@ title: "OpenClaw로 Django 프로젝트에 AI 비서 통합하기 - 멀티채널
 date: 2026-02-05
 categories: django python ai
 author: updaun
-image: "/assets/img/posts/2026-02-05-openclaw-django-integration-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-02-05-openclaw-django-integration-guide.webp"
 ---
 
 # OpenClaw로 Django 프로젝트에 AI 비서 통합하기

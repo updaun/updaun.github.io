@@ -5,7 +5,7 @@ description: "document.referrer로 유입 경로를 확인할 때의 동작 원�
 date: 2026-02-22
 categories: [Web, JavaScript, Security]
 tags: [document-referrer, referrer-policy, analytics, web]
-image: "/assets/img/posts/2026-02-22-document-referrer-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-02-22-document-referrer-guide.webp"
 ---
 
 ## 목차

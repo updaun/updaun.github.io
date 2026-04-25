@@ -5,7 +5,7 @@ date: 2025-10-10 15:00:00 +0900
 categories: [Django, API, Django-Ninja]
 tags: [Django, Django-Ninja, API, Sorting, Pagination, Performance, Backend]
 author: "updaun"
-image: "/assets/img/posts/2025-10-10-django-ninja-advanced-sorting-techniques.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-10-django-ninja-advanced-sorting-techniques.webp"
 ---
 
 Django Ninja에서 List API의 정렬 기능을 고도화하는 방법을 살펴보겠습니다. 단순한 정렬부터 복합 정렬, 동적 정렬, 성능 최적화까지 실무에서 바로 활용할 수 있는 기법들을 다룹니다.

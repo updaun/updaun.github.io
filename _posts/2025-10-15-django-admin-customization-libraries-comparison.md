@@ -5,7 +5,7 @@ date: 2025-10-15 10:00:00 +0900
 categories: [Django, Python, Admin, UI/UX]
 tags: [Django, Django-Admin, Admin-Interface, Grappelli, Jet, Suit, AdminLTE, UI, Customization]
 author: "updaun"
-image: "/assets/img/posts/2025-10-15-django-admin-customization-libraries-comparison.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-15-django-admin-customization-libraries-comparison.webp"
 ---
 
 Django의 기본 Admin 인터페이스는 강력하지만 시각적으로는 다소 단조로울 수 있습니다. 다행히 다양한 서드파티 라이브러리들이 Django Admin을 현대적이고 사용자 친화적으로 변화시켜줍니다. 이 포스트에서는 주요 Django Admin 커스터마이징 라이브러리들을 심도있게 비교하고, 프로젝트에 맞는 최적의 선택을 도와드리겠습니다.

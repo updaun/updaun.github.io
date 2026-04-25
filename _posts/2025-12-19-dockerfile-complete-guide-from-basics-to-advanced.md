@@ -5,7 +5,7 @@ date: 2025-12-19 09:00:00 +0900
 categories: [DevOps, Docker, Container]
 tags: [Docker, Dockerfile, Container, DevOps, Multi-stage, Best-Practices, Security, Optimization]
 description: "Dockerfile 작성의 기본 개념부터 멀티스테이지 빌드, 보안 강화, 성능 최적화까지 실무에서 바로 적용 가능한 완벽 가이드"
-image: "/assets/img/posts/2025-12-19-dockerfile-complete-guide-from-basics-to-advanced.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-12-19-dockerfile-complete-guide-from-basics-to-advanced.webp"
 ---
 
 ## 목차

@@ -6,7 +6,7 @@ categories: [Web Development, Backend, AWS]
 tags: [django, django-ninja, aws s3, presigned url, image upload, cloud storage, security]
 description: "Django Ninja와 AWS S3 Presigned URL을 활용하여 안전하고 효율적인 이미지 업로드 및 관리 시스템을 구축하는 방법을 알아봅니다. 직접 업로드, 보안, 성능 최적화까지 실무에서 바로 사용할 수 있는 완전한 가이드입니다."
 author: "updaun"
-image: "/assets/img/posts/2025-09-27-django-ninja-aws-s3-presigned-url-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-09-27-django-ninja-aws-s3-presigned-url-guide.webp"
 ---
 
 ## 개요

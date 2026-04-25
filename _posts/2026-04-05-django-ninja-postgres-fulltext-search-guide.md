@@ -6,7 +6,7 @@ categories: backend
 tags: [django-ninja, postgresql, fulltext-search, pg_trgm, pgroonga, korean-search, python]
 author: updaun
 render_with_liquid: false
-image: "/assets/img/posts/2026-04-05-django-ninja-postgres-fulltext-search-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-04-05-django-ninja-postgres-fulltext-search-guide.webp"
 ---
 
 # Django Ninja + PostgreSQL 풀텍스트 검색 완전 가이드 - 한글 최적화와 오탈자 허용 전략까지

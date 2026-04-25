@@ -6,7 +6,7 @@ categories: [Web Development, Backend, Django]
 tags: [django, soft-delete, database, orm, unique-together, many-to-many, constraints]
 description: "Django에서 Soft Delete를 구현하는 방법과 unique_together 제약조건, Many-to-Many 관계에서의 주의사항을 상세히 알아봅니다. 실무에서 마주치는 문제점과 해결 방법을 함께 다룹니다."
 author: "updaun"
-image: "/assets/img/posts/2025-10-02-django-soft-delete-implementation-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-02-django-soft-delete-implementation-guide.webp"
 ---
 
 ## 개요

@@ -4,7 +4,7 @@ title: "AI 도구로 Django 개발 생산성 10배 높이기: 2025년 완전 실
 date: 2025-10-18 10:00:00 +0900
 categories: [Django, AI, Development, Productivity]
 tags: [Django, AI, GitHub-Copilot, ChatGPT, Claude, Automation, Development-Tools, Productivity]
-image: "/assets/img/posts/2025-10-18-ai-powered-django-development-workflow.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-18-ai-powered-django-development-workflow.webp"
 ---
 
 2025년, AI 도구들이 소프트웨어 개발의 패러다임을 완전히 바꾸고 있습니다. Django 개발자들도 예외가 아닙니다. GitHub Copilot, ChatGPT, Claude 같은 AI 도구들을 효과적으로 활용하면 개발 생산성을 10배 이상 향상시킬 수 있습니다. 이 포스트에서는 실제 Django 프로젝트에서 AI 도구들을 어떻게 활용할 수 있는지 단계별로 알아보겠습니다.

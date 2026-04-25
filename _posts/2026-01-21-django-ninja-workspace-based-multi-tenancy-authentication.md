@@ -5,7 +5,7 @@ date: 2026-01-21 09:00:00 +0900
 categories: [Django, Authentication, Multi-tenancy]
 tags: [django, django-ninja, multi-tenancy, authentication, workspace, saas]
 description: "workspace:username 패턴을 활용한 멀티 테넌트 인증 시스템 설계 및 구현 가이드"
-image: "/assets/img/posts/2026-01-21-django-ninja-workspace-based-multi-tenancy-authentication.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-01-21-django-ninja-workspace-based-multi-tenancy-authentication.webp"
 ---
 
 ## Multi-tenancy란 무엇인가?

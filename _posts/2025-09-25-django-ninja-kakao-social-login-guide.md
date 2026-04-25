@@ -6,7 +6,7 @@ categories: [Django, Authentication]
 tags: [django-ninja, kakao login, social login, oauth2, rest api, authentication]
 description: "Django Ninja를 사용하여 카카오 소셜 로그인을 구현하는 완벽한 가이드. OAuth 2.0 플로우부터 JWT 토큰 발급까지 전체 과정을 실무 중심으로 설명합니다."
 author: "updaun"
-image: "/assets/img/posts/2025-09-25-django-ninja-kakao-social-login-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-09-25-django-ninja-kakao-social-login-guide.webp"
 ---
 
 ## 개요

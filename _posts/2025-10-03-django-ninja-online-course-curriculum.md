@@ -6,7 +6,7 @@ categories: [Education, Web Development, Backend]
 tags: [django-ninja, curriculum, online-course, education, api-development, learning-path]
 description: "Django Ninja를 처음 배우는 초보자부터 실무에서 활용할 수 있는 중급자까지, 체계적이고 실무 중심의 온라인 강의 커리큘럼을 제안합니다. 프로젝트 기반 학습과 단계별 난이도 조절로 효과적인 학습 경험을 제공합니다."
 author: "updaun"
-image: "/assets/img/posts/2025-10-03-django-ninja-online-course-curriculum.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-03-django-ninja-online-course-curriculum.webp"
 ---
 
 ## 개요

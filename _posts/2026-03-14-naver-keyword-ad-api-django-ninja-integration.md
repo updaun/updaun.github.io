@@ -4,7 +4,7 @@ title: "네이버 검색광고 API로 키워드 검색량 분석하기 - Django 
 date: 2026-03-14 10:00:00 +0900
 categories: [Django, Python, API, Marketing]
 tags: [Django Ninja, Naver API, Keyword Research, SEO, Backend, Python, Marketing Analytics, Search Advertising]
-image: "/assets/img/posts/2026-03-14-naver-keyword-ad-api-django-ninja-integration.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-03-14-naver-keyword-ad-api-django-ninja-integration.webp"
 ---
 
 SEO와 콘텐츠 마케팅을 위해 키워드 검색량 데이터는 필수입니다. 네이버는 국내 검색 시장의 30% 이상을 차지하는 주요 검색 엔진으로, 네이버 검색광고 API를 통해 키워드별 월간 검색량, PC/모바일 비율, 경쟁 정도 등 귀중한 데이터를 얻을 수 있습니다. 이 글에서는 Django Ninja와 네이버 검색광고 API를 연동하여 키워드 검색량을 분석하는 서비스를 구축하는 전체 과정을 단계별로 살펴보겠습니다.

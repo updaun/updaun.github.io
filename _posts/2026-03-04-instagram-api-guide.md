@@ -4,7 +4,7 @@ title: "인스타그램 API 완벽 가이드: Meta 앱 등록부터 인스타그
 date: 2026-03-04
 categories: [api, instagram, meta, social-media]
 tags: [instagram-api, meta-developers, api-integration, graph-api, social-media-analytics]
-image: "/assets/img/posts/2026-03-04-instagram-api-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-03-04-instagram-api-guide.webp"
 ---
 
 ## 소개: 인스타그램 API로 할 수 있는 것들

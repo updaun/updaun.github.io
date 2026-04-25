@@ -4,7 +4,7 @@ title: "Django Ninja로 AI API 서버 구축하기 - OpenAI 통합 실전 가이
 date: 2026-01-25
 categories: [Django, AI, API]
 tags: [django-ninja, openai, api, python, ai-integration]
-image: "/assets/img/posts/2026-01-25-django-ninja-ai-integration-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-01-25-django-ninja-ai-integration-guide.webp"
 ---
 
 ## 서론

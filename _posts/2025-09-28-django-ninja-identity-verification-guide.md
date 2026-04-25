@@ -6,7 +6,7 @@ categories: [Web Development, Backend, Authentication]
 tags: [django, django-ninja, identity verification, sms authentication, phone verification, id card verification, security]
 description: "Django Ninja를 활용하여 휴대폰 SMS 인증, 이메일 인증, 신분증 OCR 검증을 포함한 완전한 본인인증 시스템을 구축하는 방법을 단계별로 알아봅니다. 실제 서비스에서 사용할 수 있는 보안성과 사용성을 모두 갖춘 인증 시스템 구현 가이드입니다."
 author: "updaun"
-image: "/assets/img/posts/2025-09-28-django-ninja-identity-verification-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-09-28-django-ninja-identity-verification-guide.webp"
 ---
 
 ## 개요

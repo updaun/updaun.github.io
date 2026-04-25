@@ -6,7 +6,7 @@ categories: [Web Development, Backend, Database]
 tags: [fastapi, neon, postgresql, raw-sql, database, api, python, asyncio]
 description: "FastAPI와 클라우드 PostgreSQL 서비스인 Neon을 연동하여 Raw SQL을 사용한 고성능 API를 개발하는 완전한 가이드입니다. ORM 없이 순수 SQL로 데이터베이스를 다루는 방법을 배워보세요."
 author: "updaun"
-image: "/assets/img/posts/2025-10-01-fastapi-neon-postgres-raw-sql-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-01-fastapi-neon-postgres-raw-sql-guide.webp"
 ---
 
 ## 개요

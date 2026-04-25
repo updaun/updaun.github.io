@@ -4,7 +4,7 @@ title: "Django로 YouTube Data API 연동: 최신 업로드 저장, 재생목록
 date: 2026-02-14 10:00:00 +0900
 categories: [Django, Backend, API]
 tags: [Django, YouTube, YouTube-Data-API, Google-Cloud, OAuth, Playlist, Embed]
-image: "/assets/img/posts/2026-02-14-django-youtube-data-api-playlist-embed.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-02-14-django-youtube-data-api-playlist-embed.webp"
 ---
 
 ## 들어가며

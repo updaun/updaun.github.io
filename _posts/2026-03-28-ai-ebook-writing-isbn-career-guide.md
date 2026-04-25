@@ -4,7 +4,7 @@ title: "AI로 전자책 쓰기: 기획부터 ISBN 등록, 커리어 성장까지
 date: 2026-03-28
 categories: ai-writing
 author: updaun
-image: "/assets/img/posts/2026-03-28-ai-ebook-writing-isbn-career-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-03-28-ai-ebook-writing-isbn-career-guide.webp"
 ---
 
 # AI로 전자책 쓰기: 기획부터 ISBN 등록, 커리어 성장까지 한 번에 끝내는 실전 가이드

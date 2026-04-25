@@ -5,7 +5,7 @@ date: 2025-10-14 10:00:00 +0900
 categories: [Django, Django-Ninja, Django-RQ, Python, Background-Jobs]
 tags: [Django, Django-Ninja, Django-RQ, Redis, Background-Jobs, API, Queue, Async, Performance, Celery]
 author: "updaun"
-image: "/assets/img/posts/2025-10-14-django-ninja-rq-complete-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-14-django-ninja-rq-complete-guide.webp"
 ---
 
 현대 웹 애플리케이션에서는 즉시 처리되지 않아도 되는 작업들을 백그라운드에서 비동기적으로 처리하는 것이 중요합니다. Django Ninja와 Django RQ를 함께 사용하면 고성능 API와 효율적인 백그라운드 작업 시스템을 구축할 수 있습니다. 이 가이드에서는 단계별로 완전한 구현 방법을 알아보겠습니다.

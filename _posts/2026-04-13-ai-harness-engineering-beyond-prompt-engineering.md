@@ -5,7 +5,7 @@ date: 2026-04-13 10:00:00 +0900
 categories: [AI, Engineering, LLM]
 tags: [AI, LLM, Prompt Engineering, Harness Engineering, RAG, Agent, Workflow, Production]
 render_with_liquid: false
-image: "/assets/img/posts/2026-04-13-ai-harness-engineering-beyond-prompt-engineering.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-04-13-ai-harness-engineering-beyond-prompt-engineering.webp"
 ---
 
 AI 애플리케이션 개발이 성숙해지면서, 단순히 좋은 프롬프트를 작성하는 것만으로는 충분하지 않다는 것이 명확해졌습니다. 프로덕션 환경에서 안정적이고 확장 가능한 AI 시스템을 구축하려면 더 포괄적인 접근이 필요합니다. 바로 **하네스 엔지니어링(Harness Engineering)**입니다.

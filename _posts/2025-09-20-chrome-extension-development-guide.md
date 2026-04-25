@@ -6,7 +6,7 @@ categories: [Web Development, Browser Extension]
 tags: [chrome extension, javascript, manifest, web api, browser automation]
 description: "Chrome Extension 개발의 전체 과정을 단계별로 설명하는 실무 중심 가이드. 기획부터 개발, 테스트, 배포까지 모든 과정을 다룹니다."
 author: "updaun"
-image: "/assets/img/posts/2025-09-20-chrome-extension-development-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-09-20-chrome-extension-development-guide.webp"
 ---
 
 Chrome Extension은 브라우저 기능을 확장하여 사용자에게 추가적인 편의성을 제공하는 강력한 도구입니다. 이 포스트에서는 Chrome Extension 개발의 전체 과정을 실무 중심으로 설명하겠습니다.

@@ -5,7 +5,7 @@ date: 2025-11-05 10:00:00 +0900
 categories: [Python, FastAPI, Django]
 tags: [FastAPI, Django, ORM, SQLAlchemy, Jinja2, Migration, Admin, Authentication, Full-Stack]
 description: "FastAPI를 Django처럼 풀스택 프레임워크로 확장하는 방법을 살펴봅니다. ORM, 템플릿, 마이그레이션, Admin 패널, 인증 시스템까지 Django의 핵심 기능들을 FastAPI에서 구현하는 완전한 가이드입니다."
-image: "/assets/img/posts/2025-11-05-fastapi-like-django-full-stack-framework.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-11-05-fastapi-like-django-full-stack-framework.webp"
 ---
 
 # FastAPI를 Django처럼 사용하기: Full-Stack 프레임워크로 확장

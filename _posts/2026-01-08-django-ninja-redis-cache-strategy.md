@@ -4,7 +4,7 @@ title: "Django Ninja와 Redis로 구축하는 전략적 캐시 관리 시스템"
 date: 2026-01-08 10:00:00 +0900
 categories: [Django, Python, Redis, Performance]
 tags: [Django, Django Ninja, Redis, Cache, Async, Performance, ModelSchema, Cache Invalidation]
-image: "/assets/img/posts/2026-01-08-django-ninja-redis-cache-strategy.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-01-08-django-ninja-redis-cache-strategy.webp"
 ---
 
 Django Ninja는 FastAPI에서 영감을 받은 고성능 비동기 API 프레임워크입니다. 이 글에서는 Django Ninja의 비동기 기능과 Redis를 결합하여 전략적인 캐시 관리 시스템을 구축하는 방법을 알아보겠습니다. 단순한 캐시 저장을 넘어, 버전 관리, 무효화 전략, 그리고 실무에서 바로 적용 가능한 패턴들을 다룹니다.

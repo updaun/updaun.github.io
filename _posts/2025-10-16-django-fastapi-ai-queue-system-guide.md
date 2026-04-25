@@ -4,7 +4,7 @@ title: "Django + FastAPI AI 큐 시스템 구축: 사진 업로드 후 비동기
 date: 2025-10-16
 categories: [Backend, AI, Queue]
 tags: [Django, FastAPI, AI, Queue, Async, Celery, Redis, Background Processing]
-image: "/assets/img/posts/2025-10-16-django-fastapi-ai-queue-system-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-16-django-fastapi-ai-queue-system-guide.webp"
 ---
 
 ## 개요

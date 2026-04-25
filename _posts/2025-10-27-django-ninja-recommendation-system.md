@@ -6,7 +6,7 @@ date: 2025-10-27 10:00:00 +0900
 background: '/img/posts/django-ninja-recommendation-bg.jpg'
 categories: [Django, MachineLearning, AI]
 tags: [django-ninja, recommendation-system, collaborative-filtering, machine-learning, personalization, fastapi]
-image: "/assets/img/posts/2025-10-27-django-ninja-recommendation-system.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-27-django-ninja-recommendation-system.webp"
 ---
 
 # 🤖 Django Ninja로 구축하는 지능형 추천시스템

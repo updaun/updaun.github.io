@@ -6,7 +6,7 @@ categories: [Web Development, Django]
 tags: [django, django-ninja, jwt, authentication, api, security, python]
 description: "Django Ninja에서 JWT 토큰 기반 인증을 구현하는 완벽 가이드. JWT 선택 이유부터 실제 구현, 보안 고려사항까지 모든 과정을 다룹니다."
 author: "updaun"
-image: "/assets/img/posts/2025-09-24-django-ninja-jwt-authentication-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-09-24-django-ninja-jwt-authentication-guide.webp"
 ---
 
 ## 개요

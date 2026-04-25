@@ -4,7 +4,7 @@ title: "Google Cloud Run 완벽 가이드 - 기초부터 배포 자동화까지"
 categories: [Cloud, DevOps]
 tags: [google-cloud-run, gcp, serverless, docker, cicd, deployment, cloud-native, kubernetes]
 date: 2025-11-29 09:00:00 +0900
-image: "/assets/img/posts/2025-11-29-google-cloud-run-complete-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-11-29-google-cloud-run-complete-guide.webp"
 ---
 
 ## 1. Cloud Run 소개 및 핵심 개념

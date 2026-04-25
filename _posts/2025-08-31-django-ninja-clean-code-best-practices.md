@@ -4,7 +4,7 @@ title: "Django Ninja 클린 코드 가이드: 유지보수 가능한 API 설계 
 date: 2025-08-31 12:00:00 +0900
 categories: [Django, Clean Code]
 tags: [django-ninja, clean-code, best-practices, API-design, architecture, refactoring, Python, Django]
-image: "/assets/img/posts/2025-08-31-django-ninja-clean-code-best-practices.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-08-31-django-ninja-clean-code-best-practices.webp"
 ---
 
 클린 코드는 단순히 "작동하는 코드"를 넘어서 "읽기 쉽고, 이해하기 쉽고, 변경하기 쉬운 코드"를 의미합니다. Django Ninja로 API를 개발할 때 클린 코드 원칙을 적용하면, 장기적으로 유지보수하기 쉽고 확장 가능한 시스템을 구축할 수 있습니다.

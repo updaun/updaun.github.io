@@ -6,7 +6,7 @@ categories: [AI, Music, Tutorial]
 tags: [Suno AI, AI 음악 제작, 프리미엄 구독, 음악 생성, 크레딧 관리, 프롬프트 최적화]
 author: updaun
 excerpt: "Suno AI 프리미엄 구독을 최대한 활용하는 전문가 전략. 크레딧 효율적 관리법부터 프로페셔널 음악 제작까지, 실전에서 바로 쓸 수 있는 노하우를 공개합니다."
-image: "/assets/img/posts/2025-12-23-suno-ai-premium-expert-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-12-23-suno-ai-premium-expert-guide.webp"
 ---
 
 ## 들어가며: 프리미엄 구독, 제대로 활용하고 있나요?

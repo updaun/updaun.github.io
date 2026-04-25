@@ -5,7 +5,7 @@ date: 2026-01-04 09:00:00 +0900
 categories: [Django, Backend, Subscription]
 tags: [django-ninja, subscription, saas, payment, stripe, recurring-billing]
 description: "Django Ninja로 SaaS 구독 시스템을 처음부터 끝까지 구축하는 실전 가이드. 구독 플랜 설계부터 결제 처리, 업그레이드/다운그레이드까지 실무에서 바로 사용 가능한 완전한 구독 시스템을 만들어봅니다."
-image: "/assets/img/posts/2026-01-04-django-ninja-subscription-system-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-01-04-django-ninja-subscription-system-guide.webp"
 ---
 
 ## 1. 서론

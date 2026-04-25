@@ -5,7 +5,7 @@ date: 2026-04-15 10:00:00 +0900
 categories: [AI, Engineering, LLM]
 tags: [AI, LLM, AGENTS.md, Harness Engineering, Instructions, Copilot, Agent, Lint, Pre-commit, DevOps]
 render_with_liquid: false
-image: "/assets/img/posts/2026-04-15-agents-md-strategy-for-ai-harness-engineering.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-04-15-agents-md-strategy-for-ai-harness-engineering.webp"
 ---
 
 AI 에이전트가 프로덕션 환경에서 효과적으로 작동하려면 단순히 좋은 프롬프트를 작성하는 것만으로는 부족합니다. **AGENTS.md**와 같은 커스터마이제이션 파일을 전략적으로 구성하고, 코드 품질 도구로 AI의 출력을 제한하는 것이 핵심입니다. 이는 하네스 엔지니어링의 연장선이자 실전 전략입니다.

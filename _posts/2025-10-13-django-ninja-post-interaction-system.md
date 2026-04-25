@@ -5,7 +5,7 @@ date: 2025-10-13 10:00:00 +0900
 categories: [Django, Django-Ninja, Python, Web Development]
 tags: [Django, Django-Ninja, API, Backend, Database, ORM, Async, Performance]
 author: "updaun"
-image: "/assets/img/posts/2025-10-13-django-ninja-post-interaction-system.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-13-django-ninja-post-interaction-system.webp"
 ---
 
 Django Ninja를 사용하여 현대적인 게시물 상호작용 시스템을 구현하는 방법을 알아보겠습니다. 조회수, 좋아요, 댓글 기능과 함께 인기순, 최신순, 업데이트순 정렬까지 완벽하게 구현해보겠습니다.

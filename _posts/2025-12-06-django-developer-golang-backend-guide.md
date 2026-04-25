@@ -4,7 +4,7 @@ title: "Django 개발자를 위한 Golang 백엔드 완벽 가이드 - Echo + GO
 categories: [Backend, Golang]
 tags: [golang, go, echo, gorm, django, backend, web-framework, orm, crud, tutorial]
 date: 2025-12-06 09:00:00 +0900
-image: "/assets/img/posts/2025-12-06-django-developer-golang-backend-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-12-06-django-developer-golang-backend-guide.webp"
 ---
 
 ## 1. Django 개발자, Golang으로 백엔드 서버를 시작하다

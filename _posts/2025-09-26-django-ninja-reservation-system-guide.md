@@ -6,7 +6,7 @@ categories: [Web Development, Backend]
 tags: [django, django-ninja, reservation system, rest api, python, booking system]
 description: "Django Ninja를 활용하여 완전한 예약 시스템을 구축하는 방법을 단계별로 설명합니다. 사용자 인증, 예약 관리, 결제 연동까지 실무에서 사용할 수 있는 완전한 시스템을 만들어보겠습니다."
 author: "updaun"
-image: "/assets/img/posts/2025-09-26-django-ninja-reservation-system-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-09-26-django-ninja-reservation-system-guide.webp"
 ---
 
 ## 개요

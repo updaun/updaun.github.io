@@ -4,7 +4,7 @@ title: "Django-Ninja로 구현하는 백그라운드 태스크 관리 전략: LL
 date: 2026-02-12 10:00:00 +0900
 categories: [Django, Backend, Async]
 tags: [Django-Ninja, Background Tasks, Celery, Redis, LLM, Async, Python, API]
-image: "/assets/img/posts/2026-02-12-django-ninja-background-task-management-strategy.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-02-12-django-ninja-background-task-management-strategy.webp"
 ---
 
 ## 들어가며

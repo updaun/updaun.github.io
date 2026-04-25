@@ -5,9 +5,9 @@ date: 2025-10-30 10:30:00 +0900
 categories: [Django, Authentication, Microservices]
 tags: [django-ninja, social-auth, oauth, microservices, backend, python]
 description: "하나의 백엔드 서버에서 여러 서비스를 지원하는 모듈화된 소셜 로그인 시스템을 Django Ninja로 구현하는 완전 가이드"
-image: "/assets/images/django-ninja-social-auth-cover.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/images/django-ninja-social-auth-cover.webp"
 author: "updaun"
-image: "/assets/img/posts/2025-10-30-django-ninja-multi-service-social-auth.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-30-django-ninja-multi-service-social-auth.webp"
 ---
 
 # Django Ninja로 구축하는 멀티 서비스 소셜 로그인 시스템

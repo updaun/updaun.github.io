@@ -3,7 +3,7 @@ title: "⚡ FastAPI vs Django Ninja: 2025년 최신 심화 비교 가이드"
 date: 2025-10-20 09:00:00 +0900
 categories: [Backend, Framework Comparison]
 tags: [FastAPI, Django-Ninja, Python, API, 프레임워크비교, 백엔드개발]
-image: "/assets/img/posts/2025-10-20-fastapi-vs-django-ninja-comparison.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-10-20-fastapi-vs-django-ninja-comparison.webp"
 ---
 
 ## 🚀 Python API 프레임워크의 새로운 패러다임

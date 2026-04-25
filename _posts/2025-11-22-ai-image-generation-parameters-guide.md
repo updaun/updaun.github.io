@@ -4,7 +4,7 @@ title: "AI 이미지 생성 파라미터 완벽 가이드 - Stable Diffusion 마
 date: 2025-11-22
 categories: [AI, Image Generation, Stable Diffusion]
 tags: [AI Image Generation, Stable Diffusion, DALL-E, Midjourney, Prompt Engineering, CFG Scale, Sampling Steps, Seed]
-image: "/assets/img/posts/2025-11-22-ai-image-generation-parameters-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-11-22-ai-image-generation-parameters-guide.webp"
 ---
 
 # AI 이미지 생성 파라미터 완벽 가이드 - Stable Diffusion 마스터하기

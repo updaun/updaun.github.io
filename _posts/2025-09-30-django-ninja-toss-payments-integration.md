@@ -6,7 +6,7 @@ categories: [Web Development, Backend, Payment]
 tags: [django, django-ninja, toss-payments, payment-integration, fintech, e-commerce]
 description: "Django Ninja와 Toss Payments API를 활용하여 안전하고 신뢰할 수 있는 결제 시스템을 구축하는 방법을 초보자도 쉽게 이해할 수 있도록 단계별로 설명합니다. 결제 승인부터 웹훅 처리까지 완전한 결제 플로우를 구현해보겠습니다."
 author: "updaun"
-image: "/assets/img/posts/2025-09-30-django-ninja-toss-payments-integration.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-09-30-django-ninja-toss-payments-integration.webp"
 ---
 
 ## 개요

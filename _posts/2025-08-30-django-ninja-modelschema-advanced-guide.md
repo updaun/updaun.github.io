@@ -4,7 +4,7 @@ title: "Django Ninja ModelSchema 마스터링: 고급 활용법과 실전 패턴
 date: 2025-08-30 12:00:00 +0900
 categories: [Django, API]
 tags: [django-ninja, ModelSchema, Schema, Serialization, API Design, Python, Django, Backend]
-image: "/assets/img/posts/2025-08-30-django-ninja-modelschema-advanced-guide.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2025-08-30-django-ninja-modelschema-advanced-guide.webp"
 ---
 
 Django Ninja의 ModelSchema는 단순한 모델-스키마 매핑을 넘어서 강력한 API 설계 도구입니다. 이 글에서는 ModelSchema의 고급 기능부터 실전에서 마주치는 복잡한 시나리오까지, 깊이 있게 탐구해보겠습니다.
