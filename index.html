@@ -34,11 +34,18 @@ title: Home
                         </div>
                         {% endif %}
                     </div>
-                    
+                    {% if post.tags %}
+                    <div class="post-card-tags">
+                        {% for tag in post.tags limit: 3 %}
+                        <span class="post-card-tag">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
                     <h2 class="post-card-title">
                         <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
                     </h2>
-                    
+
                     {% if post.excerpt %}
                     <p class="post-card-excerpt">{{ post.excerpt | strip_html | truncatewords: 25 }}</p>
                     {% endif %}
@@ -110,26 +117,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 포스트 카드 HTML 생성 함수
     function createPostCard(post) {
-        const categoriesHtml = post.categories.map(cat => 
+        const categoriesHtml = post.categories.map(cat =>
             `<span class="post-category">${cat}</span>`
         ).join('');
-        
-        const imageHtml = post.image 
+
+        const tagsHtml = post.tags && post.tags.length
+            ? post.tags.slice(0, 3).map(tag => `<span class="post-card-tag">#${tag}</span>`).join('')
+            : '';
+
+        const imageHtml = post.image
             ? `<img src="${post.image}" alt="${post.title}" loading="lazy">`
             : `<div class="post-card-placeholder"><span class="post-card-icon">📝</span></div>`;
-            
+
         return `
             <article class="post-card" data-categories="${post.categories.join(' ').toLowerCase()}">
                 <div class="post-card-image">
                     ${imageHtml}
                 </div>
-                
+
                 <div class="post-card-content">
                     <div class="post-card-meta">
                         <time class="post-date">${post.date}</time>
                         ${categoriesHtml ? `<div class="post-categories">${categoriesHtml}</div>` : ''}
                     </div>
-                    
+                    ${tagsHtml ? `<div class="post-card-tags">${tagsHtml}</div>` : ''}
+
                     <h2 class="post-card-title">
                         <a href="${post.url}">${post.title}</a>
                     </h2>
@@ -158,54 +170,43 @@ document.addEventListener('DOMContentLoaded', function() {
         loadMoreText.textContent = '로딩중...';
         loadMoreBtn.disabled = true;
         
-        // 로딩 지연 효과 (실제 상황에서는 필요 없음)
-        setTimeout(() => {
-            const start = currentPage * postsPerPage;
-            const end = start + postsPerPage;
-            const nextPosts = postsData.slice(start, end);
-            
-            if (nextPosts.length === 0) {
-                // 더 이상 로드할 포스트가 없음
+        const start = currentPage * postsPerPage;
+        const end = start + postsPerPage;
+        const nextPosts = postsData.slice(start, end);
+
+        if (nextPosts.length === 0) {
+            loadMoreBtn.style.display = 'none';
+            noMorePosts.style.display = 'block';
+        } else {
+            nextPosts.forEach(post => {
+                const cardElement = document.createElement('div');
+                cardElement.innerHTML = createPostCard(post);
+                const card = cardElement.firstElementChild;
+
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                postsGrid.appendChild(card);
+
+                requestAnimationFrame(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                });
+            });
+
+            currentPage++;
+            loadMoreBtn.dataset.page = currentPage;
+
+            if (end >= postsData.length) {
                 loadMoreBtn.style.display = 'none';
                 noMorePosts.style.display = 'block';
-            } else {
-                // 새 포스트 카드 추가
-                nextPosts.forEach(post => {
-                    const cardElement = document.createElement('div');
-                    cardElement.innerHTML = createPostCard(post);
-                    const card = cardElement.firstElementChild;
-                    
-                    // 애니메이션 효과
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    
-                    postsGrid.appendChild(card);
-                    
-                    // 애니메이션 트리거
-                    setTimeout(() => {
-                        card.style.transition = 'all 0.5s ease';
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 100);
-                });
-                
-                currentPage++;
-                loadMoreBtn.dataset.page = currentPage;
-                
-                // 모든 포스트를 로드했는지 확인
-                if (end >= postsData.length) {
-                    loadMoreBtn.style.display = 'none';
-                    noMorePosts.style.display = 'block';
-                }
             }
-            
-            // 로딩 상태 복원
-            isLoading = false;
-            loadMoreSpinner.style.display = 'none';
-            loadMoreText.textContent = '더 많은 포스트 보기';
-            loadMoreBtn.disabled = false;
-            
-        }, 800);
+        }
+
+        isLoading = false;
+        loadMoreSpinner.style.display = 'none';
+        loadMoreText.textContent = '더 많은 포스트 보기';
+        loadMoreBtn.disabled = false;
     }
     
     // 무한 스크롤 구현

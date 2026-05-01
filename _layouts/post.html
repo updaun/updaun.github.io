@@ -138,36 +138,6 @@ layout: default
     {% endif %}
 </nav>
 
-<!-- 브레드크럼 구조화된 데이터 -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "홈",
-      "item": "{{ site.url }}"
-    },
-    {% if page.categories %}
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "{{ page.categories.first }}",
-      "item": "{{ site.url }}/category/{{ page.categories.first | slugify }}"
-    },
-    {% endif %}
-    {
-      "@type": "ListItem",
-      "position": {% if page.categories %}3{% else %}2{% endif %},
-      "name": "{{ page.title }}",
-      "item": "{{ page.url | absolute_url }}"
-    }
-  ]
-}
-</script>
-
 <script>
 // 링크 복사 기능
 function copyToClipboard(text) {

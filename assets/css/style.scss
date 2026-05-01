@@ -14,6 +14,7 @@
     --border-color: #e0d4f0;
     --card-shadow: 0 2px 8px rgba(139, 122, 184, 0.15);
     --gradient-bg: linear-gradient(135deg, #f8f6ff 0%, #ede7f6 100%);
+    --card-bg-dark: #f8f5ff;
     --link-color: #6b5b95;
     --link-hover: #8b7ab8;
     
@@ -608,6 +609,64 @@ a:hover {
     margin: 0;
     color: var(--text-light);
     font-size: 14px;
+}
+
+.footer-brand {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: var(--heading-color) !important;
+    margin-bottom: 0.4rem !important;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.footer-desc {
+    margin-bottom: 1rem !important;
+    line-height: 1.5;
+}
+
+.footer-social {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.footer-social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-light);
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-social-link:hover {
+    color: var(--primary-color);
+}
+
+.footer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.footer-nav-link {
+    color: var(--text-light);
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-nav-link:hover {
+    color: var(--primary-color);
+}
+
+.footer-copy {
+    font-size: 13px !important;
 }
 
 .footer-col-2 {
@@ -1741,6 +1800,27 @@ blockquote {
     transform: translateY(-1px);
 }
 
+/* 포스트 카드 태그 */
+.post-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.post-card-tag {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    background: transparent;
+    padding: 0;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.post-card-tag:hover {
+    color: var(--primary-color);
+}
+
 /* 포스트 제목 */
 .post-card-title {
     margin: 0 0 1rem 0;
@@ -2611,9 +2691,32 @@ a:focus, button:focus {
     max-width: 100%;
 }
 
-/* 리스트 항목 처리 */
+/* 포스트 본문 리스트 스타일 복원 (전역 reset 재정의) */
+.post-content ul {
+    list-style: disc;
+    padding-left: 1.75rem;
+    margin: 0.75rem 0;
+}
+
+.post-content ol {
+    list-style: decimal;
+    padding-left: 1.75rem;
+    margin: 0.75rem 0;
+}
+
+.post-content ul ul {
+    list-style: circle;
+    margin: 0.25rem 0;
+}
+
+.post-content ul ul ul {
+    list-style: square;
+}
+
 .post-content ul li,
 .post-content ol li {
+    list-style: inherit;
+    margin: 0.35rem 0;
     overflow-wrap: break-word;
     word-wrap: break-word;
     word-break: break-word;
