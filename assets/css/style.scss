@@ -2738,3 +2738,55 @@ a:focus, button:focus {
         white-space: normal;
     }
 }
+
+/* 위로 가기 버튼 */
+.scroll-to-top {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color, #8b7ab8), var(--primary-light, #b8a9d9));
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(139, 122, 184, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    z-index: 998;
+}
+
+.scroll-to-top.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.scroll-to-top:hover {
+    box-shadow: 0 8px 22px rgba(139, 122, 184, 0.5);
+    transform: translateY(-2px);
+}
+
+.scroll-to-top:focus-visible {
+    outline: 2px solid var(--primary-color, #8b7ab8);
+    outline-offset: 3px;
+}
+
+[data-theme="dark"] .scroll-to-top {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 768px) {
+    .scroll-to-top {
+        right: 1rem;
+        bottom: 1rem;
+        width: 40px;
+        height: 40px;
+    }
+}

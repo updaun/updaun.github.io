@@ -6,6 +6,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
+    <!-- 다크모드 FOUC 방지: CSS 로드 전에 data-theme 즉시 적용 -->
+    <script>
+        (function() {
+            try {
+                var saved = localStorage.getItem('theme');
+                var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+
     <!-- 커스텀 헤드 (CDN og:image가 seo 태그보다 앞에 위치해야 소셜 크롤러 우선 적용) -->
     {% include head-custom.html %}
 
@@ -137,11 +148,23 @@
             // 모바일 메뉴 토글
             const mobileToggle = document.getElementById('mobileToggle');
             const navMenu = document.getElementById('navMenu');
-            
-            mobileToggle.addEventListener('click', function() {
-                if (navMenu) navMenu.classList.toggle('active');
-                mobileToggle.classList.toggle('active');
-            });
+
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function() {
+                    if (navMenu) navMenu.classList.toggle('active');
+                    mobileToggle.classList.toggle('active');
+                });
+            }
+
+            // 모바일에서 nav-link 클릭 시 메뉴 자동 닫힘
+            if (navMenu) {
+                navMenu.querySelectorAll('.nav-link').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        navMenu.classList.remove('active');
+                        if (mobileToggle) mobileToggle.classList.remove('active');
+                    });
+                });
+            }
 
             // 검색 오버레이
             const searchBtn = document.getElementById('searchBtn');
@@ -149,19 +172,36 @@
             const searchClose = document.getElementById('searchClose');
             const searchInput = document.getElementById('searchInput');
 
-            searchBtn.addEventListener('click', function() {
+            const openSearch = function() {
+                if (!searchOverlay) return;
                 searchOverlay.classList.add('active');
-                searchInput.focus();
-            });
-
-            searchClose.addEventListener('click', function() {
+                if (searchInput) searchInput.focus();
+            };
+            const closeSearch = function() {
+                if (!searchOverlay) return;
                 searchOverlay.classList.remove('active');
-            });
+                if (searchInput) searchInput.value = '';
+                const resultsContainer = document.getElementById('searchResults');
+                if (resultsContainer) resultsContainer.style.display = 'none';
+            };
 
-            // ESC 키로 검색 오버레이 닫기
+            if (searchBtn) searchBtn.addEventListener('click', openSearch);
+            if (searchClose) searchClose.addEventListener('click', closeSearch);
+
+            // 키보드 단축키: ESC 닫기, `/` 검색 열기
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
-                    searchOverlay.classList.remove('active');
+                    closeSearch();
+                    return;
+                }
+                if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    const tag = (document.activeElement && document.activeElement.tagName) || '';
+                    const isEditable = tag === 'INPUT' || tag === 'TEXTAREA' ||
+                        (document.activeElement && document.activeElement.isContentEditable);
+                    if (!isEditable) {
+                        e.preventDefault();
+                        openSearch();
+                    }
                 }
             });
 
@@ -173,50 +213,41 @@
                 return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             };
             
-            // 초기 테마 설정 (시스템 기본값 우선)
+            // 초기 테마 설정 (data-theme 은 head 인라인 스크립트에서 이미 적용됨)
             const initTheme = () => {
-                const savedTheme = localStorage.getItem('theme');
-                const systemTheme = getSystemTheme();
-                const currentTheme = savedTheme || systemTheme;
-                
-                document.documentElement.setAttribute('data-theme', currentTheme);
-                if (currentTheme === 'dark') {
-                    themeToggle.classList.add('dark');
-                } else {
-                    themeToggle.classList.remove('dark');
+                const currentTheme = document.documentElement.getAttribute('data-theme') || getSystemTheme();
+                if (themeToggle) {
+                    themeToggle.classList.toggle('dark', currentTheme === 'dark');
                 }
             };
-            
-            // 초기 테마 적용
+
             initTheme();
-            
+
             // 시스템 테마 변경 감지
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
                 if (!localStorage.getItem('theme')) {
                     const newTheme = e.matches ? 'dark' : 'light';
                     document.documentElement.setAttribute('data-theme', newTheme);
-                    if (newTheme === 'dark') {
-                        themeToggle.classList.add('dark');
-                    } else {
-                        themeToggle.classList.remove('dark');
-                    }
+                    if (themeToggle) themeToggle.classList.toggle('dark', newTheme === 'dark');
                 }
             });
 
-            themeToggle.addEventListener('click', function() {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
-                document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                themeToggle.classList.toggle('dark');
-            });
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    themeToggle.classList.toggle('dark', newTheme === 'dark');
+                });
+            }
 
             // 드롭다운 메뉴
             const dropdowns = document.querySelectorAll('.dropdown');
             dropdowns.forEach(dropdown => {
                 const toggle = dropdown.querySelector('.dropdown-toggle');
-                const menu = dropdown.querySelector('.dropdown-menu');
+                if (!toggle) return;
 
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -231,27 +262,40 @@
                 });
             });
 
-            // 스크롤 시 헤더 스타일 변경
+            // 스크롤 시 헤더 스타일 변경 + 위로가기 버튼 표시
             let lastScrollY = window.scrollY;
             const header = document.querySelector('.modern-header');
-            
+            const scrollTopBtn = document.getElementById('scrollToTop');
+
             window.addEventListener('scroll', function() {
                 const currentScrollY = window.scrollY;
-                
-                if (currentScrollY > 100) {
-                    header.classList.add('scrolled');
-                } else {
-                    header.classList.remove('scrolled');
+
+                if (header) {
+                    if (currentScrollY > 100) {
+                        header.classList.add('scrolled');
+                    } else {
+                        header.classList.remove('scrolled');
+                    }
+
+                    if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                        header.classList.add('hidden');
+                    } else {
+                        header.classList.remove('hidden');
+                    }
                 }
-                
-                if (currentScrollY > lastScrollY && currentScrollY > 100) {
-                    header.classList.add('hidden');
-                } else {
-                    header.classList.remove('hidden');
+
+                if (scrollTopBtn) {
+                    scrollTopBtn.classList.toggle('visible', currentScrollY > 400);
                 }
-                
+
                 lastScrollY = currentScrollY;
             });
+
+            if (scrollTopBtn) {
+                scrollTopBtn.addEventListener('click', function() {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
 
             // 검색 기능
             let searchData = [];
@@ -289,14 +333,13 @@
             // 검색 결과 표시 함수
             function displaySearchResults(results) {
                 let resultsContainer = document.getElementById('searchResults');
-                
+
                 if (!resultsContainer) {
-                    // 검색 결과 컨테이너가 없으면 생성
+                    const searchContainer = document.querySelector('.search-container');
+                    if (!searchContainer) return;
                     resultsContainer = document.createElement('div');
                     resultsContainer.id = 'searchResults';
                     resultsContainer.className = 'search-results';
-                    
-                    const searchContainer = document.querySelector('.search-container');
                     searchContainer.appendChild(resultsContainer);
                 }
 
@@ -356,17 +399,6 @@
                 });
             }
 
-            // 검색 오버레이 닫을 때 결과 초기화
-            if (searchClose) {
-                searchClose.addEventListener('click', function() {
-                    searchOverlay.classList.remove('active');
-                    searchInput.value = '';
-                    const resultsContainer = document.getElementById('searchResults');
-                    if (resultsContainer) {
-                        resultsContainer.style.display = 'none';
-                    }
-                });
-            }
         });
 
         // 코드 블럭 복사 기능 초기화 플래그
@@ -583,6 +615,12 @@
             </div>
         </div>
     </main>
+
+    <button class="scroll-to-top" id="scrollToTop" aria-label="위로 가기" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
 
     <footer class="site-footer">
         <div class="wrapper">
