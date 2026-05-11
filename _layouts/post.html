@@ -3,7 +3,7 @@ layout: default
 ---
 
 <div class="post-layout">
-    <aside class="post-sidebar">
+    <aside class="post-sidebar" aria-label="목차">
         <div class="post-sidebar-content">
             <!-- 목차가 여기에 동적으로 삽입됩니다 -->
             <div id="table-of-contents-sidebar" class="toc-sidebar">
@@ -20,12 +20,13 @@ layout: default
         </div>
     </aside>
 
-    <main class="post-main">
+    <main class="post-main" id="post-body">
         <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+            <a href="{{ '/' | relative_url }}" class="post-back-link">← 블로그 홈</a>
             <header class="post-header">
                 <h1 class="post-title p-name" itemprop="name headline">{{ page.title | escape }}</h1>
-                <div class="post-meta">
-                    <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
+                <div class="post-meta post-meta--detail">
+                    <time class="dt-published post-meta-item" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
                         {{ page.date | date: "%Y년 %m월 %d일" }}
                     </time>
                     {% if page.last_modified_at %}
@@ -35,14 +36,16 @@ layout: default
                     {% endif %}
                     
                     {% if page.author %}
-                    • <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+                    <span class="post-meta-sep" aria-hidden="true">·</span>
+                    <span class="post-meta-item" itemprop="author" itemscope itemtype="http://schema.org/Person">
                         <span class="p-author h-card" itemprop="name">{{ page.author }}</span>
                     </span>
                     {% endif %}
                     
-                    <!-- 읽는 시간 표시 -->
-                    <span class="reading-time">
-                        • ⏱️ {{ page.content | strip_html | number_of_words | divided_by: 200 | plus: 1 }}분 읽기
+                    <span class="post-meta-sep" aria-hidden="true">·</span>
+                    <span class="post-meta-item reading-time">
+                        <span class="reading-time-icon" aria-hidden="true">⏱️</span>
+                        <span>{{ page.content | strip_html | number_of_words | divided_by: 200 | plus: 1 }}분 읽기</span>
                     </span>
                     
                     <!-- 단어 수 (SEO용, 숨김) -->
@@ -92,10 +95,9 @@ layout: default
                        class="share-btn linkedin" target="_blank" rel="noopener" aria-label="링크드인에 공유">
                         💼 링크드인
                     </a>
-                    <a href="javascript:void(0)" onclick="copyToClipboard('{{ page.url | absolute_url }}')" 
-                       class="share-btn copy" aria-label="링크 복사">
+                    <button type="button" class="share-btn copy" id="post-copy-link-btn" data-copy-url="{{ page.url | absolute_url }}" aria-label="이 글의 URL 클립보드에 복사">
                         🔗 링크 복사
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -107,7 +109,7 @@ layout: default
                 <div class="related-posts-grid">
                     {% for post in related_posts %}
                     <article class="related-post">
-                        <h4><a href="{{ post.url }}" itemprop="relatedLink">{{ post.title }}</a></h4>
+                        <h4><a href="{{ post.url | relative_url }}" itemprop="relatedLink">{{ post.title }}</a></h4>
                         <time>{{ post.date | date: "%Y.%m.%d" }}</time>
                         {% if post.excerpt %}
                         <p>{{ post.excerpt | strip_html | truncatewords: 15 }}</p>
@@ -122,16 +124,16 @@ layout: default
 </div>
 
 <!-- 네비게이션 -->
-<nav class="post-navigation" role="navigation">
+<nav class="post-navigation" role="navigation" aria-label="이전·다음 글">
     {% if page.previous.url %}
-    <a class="prev-post" href="{{ page.previous.url }}" rel="prev">
+    <a class="prev-post" href="{{ page.previous.url | relative_url }}" rel="prev">
         <span class="nav-label">← 이전 글</span>
         <span class="nav-title">{{ page.previous.title }}</span>
     </a>
     {% endif %}
     
     {% if page.next.url %}
-    <a class="next-post" href="{{ page.next.url }}" rel="next">
+    <a class="next-post" href="{{ page.next.url | relative_url }}" rel="next">
         <span class="nav-label">다음 글 →</span>
         <span class="nav-title">{{ page.next.title }}</span>
     </a>
@@ -139,12 +141,21 @@ layout: default
 </nav>
 
 <script>
-// 링크 복사 기능
+function getScrollOffset() {
+    var header = document.querySelector('.modern-header');
+    var h = header ? header.offsetHeight : 70;
+    return Math.max(h + 16, 88);
+}
+
+function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 function copyToClipboard(text) {
     if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(() => {
-            showNotification('링크가 클립보드에 복사되었습니다! 📋');
-        }).catch(() => {
+        navigator.clipboard.writeText(text).then(function() {
+            showNotification('링크가 클립보드에 복사되었습니다.');
+        }).catch(function() {
             fallbackCopyTextToClipboard(text);
         });
     } else {
@@ -153,7 +164,7 @@ function copyToClipboard(text) {
 }
 
 function fallbackCopyTextToClipboard(text) {
-    const textArea = document.createElement('textarea');
+    var textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.style.position = 'fixed';
     textArea.style.left = '-999999px';
@@ -161,62 +172,66 @@ function fallbackCopyTextToClipboard(text) {
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-    
     try {
         document.execCommand('copy');
-        showNotification('링크가 클립보드에 복사되었습니다! 📋');
+        showNotification('링크가 클립보드에 복사되었습니다.');
     } catch (err) {
-        showNotification('링크 복사에 실패했습니다. 수동으로 복사해주세요.');
+        showNotification('링크 복사에 실패했습니다. 주소창에서 복사해 주세요.');
     }
-    
     document.body.removeChild(textArea);
 }
 
 function showNotification(message) {
-    const notification = document.createElement('div');
+    var notification = document.createElement('div');
     notification.className = 'copy-notification';
+    notification.setAttribute('role', 'status');
+    notification.setAttribute('aria-live', 'polite');
     notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: var(--primary-color);
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        font-weight: 500;
-        animation: slideIn 0.3s ease;
-    `;
-    
+    if (!prefersReducedMotion()) {
+        notification.classList.add('copy-notification--animated');
+    }
     document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease forwards';
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
+    setTimeout(function() {
+        notification.classList.add('copy-notification--out');
+        setTimeout(function() {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 280);
+    }, 2800);
 }
 
-// CSS 애니메이션 추가
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+function scrollToHeading(target) {
+    if (!target) return;
+    if (!target.hasAttribute('tabindex')) {
+        target.setAttribute('tabindex', '-1');
     }
-    @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-`;
-document.head.appendChild(style);
+    var offset = getScrollOffset();
+    var y = target.getBoundingClientRect().top + window.pageYOffset - offset;
+    window.scrollTo({
+        top: Math.max(0, y),
+        behavior: prefersReducedMotion() ? 'auto' : 'smooth'
+    });
+    try {
+        history.replaceState(null, '', '#' + target.id);
+    } catch (e) {}
+}
 
 // 목차 자동 생성 (h2, h3 태그 기준) - 사이드바에 생성
 document.addEventListener('DOMContentLoaded', function() {
-    const content = document.querySelector('.post-content');
+    var copyBtn = document.getElementById('post-copy-link-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            var url = copyBtn.getAttribute('data-copy-url') || '';
+            if (url) copyToClipboard(url);
+        });
+    }
+
+    var content = document.querySelector('.post-content');
+    if (!content) {
+        return;
+    }
+
     const headings = content.querySelectorAll('h2, h3');
     const tocSidebar = document.getElementById('table-of-contents-sidebar');
     
@@ -236,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
         headings.forEach((heading, index) => {
             const id = heading.id || `heading-${index}`;
             heading.id = id;
+            heading.setAttribute('tabindex', '-1');
             
             const li = document.createElement('li');
             li.className = `toc-${heading.tagName.toLowerCase()}`;
@@ -276,16 +292,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 스무스 스크롤
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+    // 목차·본문 앵커: 고정 헤더 높이만큼 오프셋 스크롤
+    document.querySelectorAll('.toc-sidebar a[href^="#"], .post-content a[href^="#"]').forEach(function(anchor) {
+        anchor.addEventListener('click', function(e) {
+            var href = anchor.getAttribute('href');
+            if (!href || href.length < 2) return;
+            var target = document.querySelector(href);
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                e.preventDefault();
+                scrollToHeading(target);
+                try {
+                    target.focus({ preventScroll: true });
+                } catch (err) {}
             }
         });
     });
@@ -330,5 +348,14 @@ document.addEventListener('DOMContentLoaded', function() {
             progressBar.style.opacity = '0';
         }
     });
+
+    if (window.location.hash) {
+        var hashTarget = document.querySelector(window.location.hash);
+        if (hashTarget && content.contains(hashTarget)) {
+            window.requestAnimationFrame(function() {
+                scrollToHeading(hashTarget);
+            });
+        }
+    }
 });
 </script>

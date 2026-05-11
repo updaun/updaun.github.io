@@ -68,6 +68,16 @@
     --button-hover-shadow: 0 8px 25px rgba(93, 76, 122, 0.6);
 }
 
+html {
+    scroll-padding-top: 5.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
 /* 기본 스타일 */
 * {
     box-sizing: border-box;
@@ -926,7 +936,7 @@ body {
     font-weight: 600;
 }
 
-.post-meta {
+.post-list .post-meta {
     font-size: 14px;
     color: var(--text-light);
     margin-bottom: 15px;
@@ -935,7 +945,7 @@ body {
     gap: 10px;
 }
 
-.post-meta::before {
+.post-list .post-meta::before {
     content: '📅';
     font-size: 16px;
 }
@@ -1000,6 +1010,7 @@ body {
     margin-bottom: 15px;
     color: var(--primary-dark);
     font-weight: 600;
+    scroll-margin-top: 5.75rem;
 }
 
 .post-content h1 {
@@ -1024,6 +1035,11 @@ body {
     height: 20px;
     background: var(--primary-color);
     border-radius: 2px;
+}
+
+.post-content h5,
+.post-content h6 {
+    scroll-margin-top: 5.75rem;
 }
 
 .post-content img {
@@ -1101,10 +1117,79 @@ body {
     transition: color 0.3s ease;
 }
 
+article.post .post-title {
+    font-size: clamp(1.65rem, 2.5vw + 1rem, 2.35rem);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+}
+
 .post-header {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 2rem;
+    padding: 1.75rem 1.5rem 1.5rem;
+    border-bottom: none;
+    border-radius: 16px;
+    background: linear-gradient(165deg, var(--accent-color) 0%, transparent 55%);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+[data-theme="dark"] .post-header {
+    background: linear-gradient(165deg, rgba(45, 37, 66, 0.6) 0%, transparent 60%);
+}
+
+.post-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    padding: 0.35rem 0;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.post-back-link:hover {
+    color: var(--primary-color);
+    transform: translateX(-2px);
+}
+
+.post-main article.post {
+    max-width: 48rem;
+}
+
+.post-meta--detail {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.post-meta--detail .post-meta-sep {
+    color: var(--text-light);
+    opacity: 0.7;
+    user-select: none;
+}
+
+.post-meta--detail .post-meta-item.reading-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 500;
+}
+
+.post-meta--detail time {
+    margin: 0;
+}
+
+.post-excerpt {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: var(--text-light);
 }
 
 .post-meta {
@@ -2098,6 +2183,14 @@ blockquote {
     border: 2px solid transparent;
 }
 
+button.share-btn {
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
 .share-btn.twitter {
     background: #1da1f2;
     color: white;
@@ -2626,6 +2719,13 @@ a:focus, button:focus {
         align-items: flex-start;
         gap: 0.5rem;
     }
+
+    .post-meta.post-meta--detail {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem 0.5rem;
+    }
 }
 
 /* 테이블 반응형 처리 및 오버플로우 방지 */
@@ -2780,6 +2880,63 @@ a:focus, button:focus {
 
 [data-theme="dark"] .scroll-to-top {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* 복사 알림 (포스트 상세) */
+.copy-notification {
+    position: fixed;
+    top: 5.5rem;
+    right: 1.25rem;
+    max-width: min(90vw, 22rem);
+    padding: 0.75rem 1.15rem;
+    border-radius: 10px;
+    background: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    z-index: 10000;
+}
+
+.copy-notification--animated {
+    animation: copyNotifyIn 0.35s ease forwards;
+}
+
+.copy-notification--out {
+    animation: copyNotifyOut 0.28s ease forwards;
+}
+
+@keyframes copyNotifyIn {
+    from {
+        transform: translateX(110%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes copyNotifyOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(110%);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .copy-notification--animated,
+    .copy-notification--out {
+        animation: none;
+    }
+    .copy-notification--out {
+        opacity: 0;
+    }
 }
 
 @media (max-width: 768px) {
