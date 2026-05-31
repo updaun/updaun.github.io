@@ -5,7 +5,7 @@ date: 2026-05-29
 categories: [cursor, developer-tools]
 tags: [cursor, ai-coding, productivity, agent, plan-mode, cursor-rules, mcp, developer-tips]
 author: updaun
-image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-05-29-cursor-developer-tips.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-05-29-cursor-developer-tips-community-collection.webp"
 description: "r/cursor, X(Twitter), 실무 개발자들이 공유하는 Cursor IDE 꿀팁을 설정·모드·컨텍스트·워크플로우·비용·주의사항으로 정리했습니다."
 excerpt: "Cursor는 '질만 잘하면' 되는 도구가 아닙니다. Rules, Plan Mode, @컨텍스트, Fresh Chat 같은 운영 습관이 쌓여야 체감 속도가 납니다. 커뮤니티에서 반복적으로 검증된 팁만 골라 실전 가이드로 모았습니다."
 ---

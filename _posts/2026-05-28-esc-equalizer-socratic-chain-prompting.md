@@ -5,7 +5,7 @@ date: 2026-05-28
 categories: [ai, prompt]
 tags: [prompt-engineering, esc, equalizer, socratic, chain-of-thought, llm, workflow]
 author: updaun
-image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-05-28-esc-prompting.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-05-28-esc-equalizer-socratic-chain-prompting.webp"
 ---
 
 # ESC(Equalizer + Socratic + Chain) Prompting — 일관된 결과를 만드는 실전 프롬프트 프레임워크

@@ -5,7 +5,7 @@ date: 2026-05-30
 categories: [cursor, ai, automation]
 tags: [cursor, ai-agent, automation, daily-report, web-search, mcp, serpapi, productivity, briefing]
 author: updaun
-image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-05-30-ai-report-employee-daily-briefing.webp"
+image: "https://pub-f5c290ac8b834bddbdf454a2a01e3a9b.r2.dev/assets/img/posts/2026-05-30-ai-report-employee-daily-briefing-automation.webp"
 description: "AI가 웹 검색으로 필요한 정보를 찾아 매일 같은 시간에 브리핑하는 'Report 직원'을 Cursor Automations, /loop, Django+Celery 세 가지 경로로 만드는 실전 가이드입니다."
 excerpt: "매일 아침 같은 질문을 반복하지 마세요. '무엇을 찾을지', '어떻게 검증할지', '언제 어디로 보낼지'만 정의하면 AI Report 직원이 대신 조사하고 요약해 옵니다. 웹 검색을 적극 쓰는 설계가 핵심입니다."
 ---
